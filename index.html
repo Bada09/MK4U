@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador MK4U</title>
+<style>
+:root{
+  --bg:#f5f6f1;
+  --surface:#ffffff;
+  --surface-2:#eceee6;
+  --border:#d9dcd1;
+  --text:#16211c;
+  --text-muted:#5b6a5f;
+  --accent:#0d7d68;
+  --accent-strong:#095e4d;
+  --accent-2:#2a6f9e;
+  --accent-soft:#e2f0ea;
+  --positive:#1f8a4c;
+  --positive-soft:#e5f4ea;
+  --negative:#c1442a;
+  --negative-soft:#faeae6;
+  --warning:#af7f22;
+  --warning-soft:#f7f0e0;
+  --shadow: 0 1px 2px rgba(20,30,25,.06), 0 8px 24px -12px rgba(20,30,25,.18);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c1310;
+    --surface:#121c17;
+    --surface-2:#17221c;
+    --border:#26352c;
+    --text:#e8efe9;
+    --text-muted:#93a69a;
+    --accent:#2ec2a1;
+    --accent-strong:#59d9bb;
+    --accent-2:#63aee0;
+    --accent-soft:#153029;
+    --positive:#3fd17d;
+    --positive-soft:#12281c;
+    --negative:#ff8064;
+    --negative-soft:#2c1712;
+    --warning:#e7b45c;
+    --warning-soft:#2c2312;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 30px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c1310;
+  --surface:#121c17;
+  --surface-2:#17221c;
+  --border:#26352c;
+  --text:#e8efe9;
+  --text-muted:#93a69a;
+  --accent:#2ec2a1;
+  --accent-strong:#59d9bb;
+  --accent-2:#63aee0;
+  --accent-soft:#153029;
+  --positive:#3fd17d;
+  --positive-soft:#12281c;
+  --negative:#ff8064;
+  --negative-soft:#2c1712;
+  --warning:#e7b45c;
+  --warning-soft:#2c2312;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 30px -12px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box; min-width:0;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:"IBM Plex Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  padding:0 16px;
+  padding-block:20px 48px;
+  font-variant-numeric: tabular-nums;
+  overflow-x:hidden;
+}
+img,svg{ max-width:100%; }
+h1,h2,h3{ font-family:"Fraunces","IBM Plex Sans",serif; font-weight:600; text-wrap:balance; margin:0; }
+.mono{ font-family:"IBM Plex Mono", monospace; }
+.wrap{ max-width:1180px; margin:0 auto; }
+
+header.page{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:16px;
+  flex-wrap:wrap;
+  margin-bottom:22px;
+  padding-bottom:18px;
+  border-bottom:1px solid var(--border);
+}
+header.page .eyebrow{
+  text-transform:uppercase; letter-spacing:.09em; font-size:11.5px; color:var(--accent);
+  font-weight:600; margin-bottom:6px;
+}
+header.page h1{ font-size:clamp(22px,5vw,32px); color:var(--text); overflow-wrap:break-word; }
+header.page p{ margin:6px 0 0; color:var(--text-muted); font-size:14px; max-width:56ch; overflow-wrap:break-word; }
+header.page > div{ min-width:220px; flex:1 1 320px; }
+.badge-live{
+  display:inline-flex; align-items:center; gap:6px;
+  background:var(--accent-soft); color:var(--accent-strong);
+  border-radius:100px; padding:6px 12px; font-size:12.5px; font-weight:600;
+  white-space:nowrap;
+}
+.badge-live .dot{ width:7px;height:7px;border-radius:50%; background:var(--accent-strong); animation:pulse 2s infinite; }
+@media (prefers-reduced-motion: reduce){ .badge-live .dot{ animation:none; } }
+@keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+.grid{ display:grid; gap:16px; }
+.panel{
+  background:var(--surface); border:1px solid var(--border); border-radius:14px;
+  padding:20px; box-shadow:var(--shadow);
+}
+.panel h2{ font-size:17px; margin-bottom:4px; }
+.panel .sub{ color:var(--text-muted); font-size:13px; margin-bottom:16px; }
+
+/* ---- Controls ---- */
+.controls-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
+.control-card{
+  border:1px solid var(--border); border-radius:12px; padding:14px 14px 12px;
+  background:var(--surface-2);
+  display:flex; flex-direction:column; gap:10px;
+}
+.control-card .ctitle{ font-size:13.5px; font-weight:600; line-height:1.3; overflow-wrap:break-word; }
+.control-card .cdesc{ font-size:12px; color:var(--text-muted); line-height:1.4; overflow-wrap:break-word; }
+.toggle-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.switch{
+  position:relative; width:66px; height:32px; border-radius:100px;
+  background:var(--border); border:none; cursor:pointer; flex:none;
+  transition:background .15s ease;
+}
+.switch::after{
+  content:""; position:absolute; top:3px; left:3px; width:26px; height:26px; border-radius:50%;
+  background:var(--surface); box-shadow:0 1px 3px rgba(0,0,0,.3); transition:transform .18s ease;
+}
+.switch[data-on="true"]{ background:var(--accent); }
+.switch[data-on="true"]::after{ transform:translateX(34px); }
+.switch-label{ font-size:12.5px; font-weight:700; letter-spacing:.03em; }
+.switch-label[data-on="true"]{ color:var(--accent-strong); }
+.switch-label[data-on="false"]{ color:var(--text-muted); }
+.num-field{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.num-field label{ font-size:11.5px; color:var(--text-muted); flex:1 1 auto; min-width:120px; overflow-wrap:break-word; }
+.num-field input{
+  width:84px; flex:none; border:1px solid var(--border); background:var(--surface); color:var(--text);
+  border-radius:8px; padding:7px 9px; font-family:"IBM Plex Mono",monospace; font-size:13px;
+}
+.num-field input:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+.num-field.disabled{ opacity:.45; pointer-events:none; }
+
+.reset-row{ display:flex; justify-content:flex-end; margin-top:14px; }
+button.reset{
+  background:transparent; border:1px solid var(--border); color:var(--text-muted);
+  border-radius:100px; padding:8px 16px; font-size:12.5px; font-weight:600; cursor:pointer;
+  transition:border-color .15s, color .15s;
+}
+button.reset:hover{ border-color:var(--accent); color:var(--accent-strong); }
+button.reset:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+/* ---- KPI tiles ---- */
+.kpi-grid{ grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); }
+.kpi{
+  background:var(--surface); border:1px solid var(--border); border-radius:14px;
+  padding:16px 18px; box-shadow:var(--shadow);
+  display:flex; flex-direction:column; gap:6px;
+}
+.kpi .label{ font-size:11.5px; text-transform:uppercase; letter-spacing:.07em; color:var(--text-muted); font-weight:600; overflow-wrap:break-word; }
+.kpi .value{ font-family:"IBM Plex Mono",monospace; font-size:clamp(17px,4.4vw,24px); font-weight:600; line-height:1.15; overflow-wrap:anywhere; word-break:break-word; }
+.kpi .value.pos{ color:var(--positive); }
+.kpi .value.neg{ color:var(--negative); }
+.kpi .foot{ font-size:11.5px; color:var(--text-muted); overflow-wrap:break-word; }
+
+/* ---- Scenario cards ---- */
+.scenario-grid{ grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); }
+.scenario-card{
+  border-radius:12px; padding:16px; border:1px solid var(--border); background:var(--surface-2);
+  display:flex; flex-direction:column; gap:8px; position:relative;
+}
+.scenario-card.is-base{ border-color:var(--accent); background:var(--accent-soft); }
+.scenario-card .stag{
+  font-size:11px; text-transform:uppercase; letter-spacing:.08em; font-weight:700; color:var(--text-muted);
+}
+.scenario-card.is-base .stag{ color:var(--accent-strong); }
+.scenario-card .mult{ font-size:13px; color:var(--text-muted); }
+.scenario-row{ display:flex; justify-content:space-between; gap:10px; font-size:13px; padding-top:6px; border-top:1px dashed var(--border); }
+.scenario-row .k{ color:var(--text-muted); overflow-wrap:break-word; }
+.scenario-row .v{ font-family:"IBM Plex Mono",monospace; font-weight:600; overflow-wrap:anywhere; text-align:right; }
+
+/* ---- Charts ---- */
+.chart-card svg{ width:100%; height:auto; display:block; overflow:visible; }
+.chart-legend{ display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; font-size:12px; color:var(--text-muted); }
+.chart-legend span{ display:inline-flex; align-items:center; gap:6px; }
+.chart-legend i{ width:10px; height:10px; border-radius:3px; display:inline-block; flex:none; }
+.chart-svg-wrap{ width:100%; overflow-x:auto; }
+.chart-svg-wrap svg text{ font-family:"IBM Plex Mono",monospace; }
+
+.two-col{ grid-template-columns:1fr 1fr; }
+@media (max-width:820px){ .two-col{ grid-template-columns:1fr; } }
+
+footer.note{
+  margin-top:22px; padding-top:16px; border-top:1px solid var(--border);
+  font-size:12px; color:var(--text-muted); line-height:1.6;
+}
+footer.note strong{ color:var(--text); }
+
+.section-title{ margin:30px 0 12px; display:flex; align-items:baseline; gap:10px; }
+.section-title h2{ font-size:19px; }
+.section-title .n{ font-family:"IBM Plex Mono",monospace; color:var(--accent); font-size:13px; font-weight:700; }
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+
+
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page">
+    <div>
+      <div class="eyebrow">LAVAÍ × MK4U — Ferramenta de simulação</div>
+      <h1>Valuation e retorno para investidores</h1>
+      <p>Mesmos botões de cenário da aba Premissas da planilha — TIR, VPL, payback e múltiplo recalculam ao vivo conforme você testa.</p>
+    </div>
+    <span class="badge-live"><span class="dot"></span>Recalcula em tempo real</span>
+  </header>
+
+  <!-- CONTROLS -->
+  <section class="panel">
+    <h2>Painel de simulação — botões</h2>
+    <div class="sub">Estratégia Global = Estratégia Atual (78 máquinas, fixa) + Estratégia MK4U (torres em condomínios, cronograma de instalação da planilha).</div>
+    <div class="controls-grid" id="controls"></div>
+    <div class="reset-row"><button class="reset" id="resetBtn">Restaurar padrão da planilha</button></div>
+  </section>
+
+  <!-- KPIs -->
+  <div class="section-title"><h2>Retorno do investidor</h2><span class="n">Cenário Base</span></div>
+  <div class="grid kpi-grid" id="kpis"></div>
+
+  <!-- Scenarios -->
+  <div class="section-title"><h2>Valor terminal na saída (mês 60)</h2><span class="n">3 cenários</span></div>
+  <div class="grid scenario-grid" id="scenarios"></div>
+
+  <!-- Charts -->
+  <div class="section-title"><h2>Evolução dos 60 meses</h2></div>
+  <div class="grid two-col">
+    <div class="panel chart-card">
+      <h2>Fluxo de caixa acumulado do investidor</h2>
+      <div class="sub">Projeto não alavancado, cenário Base — o mês em que a curva cruza zero é o payback simples.</div>
+      <div class="chart-svg-wrap"><svg id="cashChart" viewBox="0 0 600 260" preserveAspectRatio="xMidYMid meet"></svg></div>
+    </div>
+    <div class="panel chart-card">
+      <h2>EBITDA Global mensal</h2>
+      <div class="sub">Decomposto entre Estratégia Atual (estável) e Estratégia MK4U (cresce com as torres).</div>
+      <div class="chart-svg-wrap"><svg id="ebitdaChart" viewBox="0 0 600 260" preserveAspectRatio="xMidYMid meet"></svg></div>
+      <div class="chart-legend" id="ebitdaLegend"></div>
+    </div>
+  </div>
+
+  <footer class="note">
+    <strong>Metodologia:</strong> replica as fórmulas da planilha <span class="mono">LAVAI_MK4U_UnitEconomics_Global_5anos.xlsx</span> (abas Premissas, Operação_Estrategia_MK4U, PL_Global_Consolidado_60m, Operação_Consolidada e Valuation_Investidores) — validado célula a célula contra o recálculo da planilha para múltiplas combinações de botões. Fluxo de caixa do investidor = EBITDA Global − CAPEX de torres (projeto não alavancado, como no cenário "C" da aba Valuation). Payback simples conta meses de fluxo acumulado negativo; TIR e VPL usam a taxa de desconto mensal equivalente ao WACC de 20% a.a. da aba Valuation. Premissas fixas nesta ferramenta (não controladas pelos botões): cronograma de instalação de torres, impostos (PIS+COFINS 9,25%), inflação anual (10% receita / 5% custos), depreciação em 120 meses e financiamento via consórcio. Ferramenta de apoio — a planilha permanece a fonte oficial.
+  </footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================= MODEL CONSTANTS (from Premissas) ============================= */
+const C = {
+  CustoAgua:0.77, CustoLuzLavagem:0.18, CustoLuzSecagem:1.43, CustoQuimico:0.52, MixLavagem:0.61,
+  ImpostosPct:0.0925,
+  FeeMK4UPct:0.05, TaxaFixaMK4U:5000,
+  PrecoCiclo:13, CiclosDiaMaquina:3.5, MaquinasPorTorre:2, TorresPorCondo:2,
+  CapexTorreEquip:35000, CapexCondoObra:10000,
+  CustoBloco150:10925.24,
+  PrecoTorreConsorcio:35000, TaxaConsorcioAA:0.0721,
+  PrazoConsorcioMeses:48, LancePct:0.32, SaldoConsorcioPct:0.68,
+  TaxaEmprestimoLanceAA:0.20,
+  InflacaoAnual:0.10, InflacaoCustos:0.05,
+  PeriodoDeprecMeses:120,
+  RampAdesaoInicial:0.6, RampAdesaoMeses:4,
+  WACC_AA:0.20,
+  MultConserv:4, MultBase:5, MultOtim:7,
+};
+C.CiclosTorreMes = C.CiclosDiaMaquina*C.MaquinasPorTorre*30;
+C.CapexTorreTotal = C.CapexTorreEquip + C.CapexCondoObra/C.TorresPorCondo;
+C.TaxaConsorcioAM = Math.pow(1+C.TaxaConsorcioAA, 1/12)-1;
+C.TaxaEmprestimoLanceAM = Math.pow(1+C.TaxaEmprestimoLanceAA, 1/12)-1;
+C.WACC_AM = Math.pow(1+C.WACC_AA, 1/12)-1;
+
+// Torres ativas (fim do mês) - input schedule from the workbook, months 1..60
+const TORRES = [2,5,8,18,25,35,45,60,75,90,100,100,100,120,140,155,170,190,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200];
+
+// Manutenção residual — histórico mensal (Estratégia Atual), meses 1..60, R$/mês a preço-base
+const MANUT_ANCHOR = [-25178.32,-27539.73,-27729.69,-30103.28,-29224.77,-26650.97,-26120.68,-24867.95,-25089.33,-23697.88,-24087.65,-24909.09,-23829.12,-26063.25,-26337.83,-28358.02,-27119.67,-25312.71,-24864.96,-23750.38,-23964.86,-22610.26,-22974.73,-23719.06,-22748.36,-24770.8,-25053.63,-26542.08,-25821.1,-23770.6,-23377.04,-22449.34,-22698.76,-21451.04,-21859.46,-22615.4,-21831.47,-23743.33,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66];
+
+const N = 60;
+
+/* ============================= FINANCIAL HELPERS ============================= */
+function irrMonthly(cf){
+  // Bisection on NPV(rate): robust even when the cash-flow series has
+  // multiple sign changes (e.g. an interior cost bump), where a plain
+  // Newton-Raphson step can overshoot and blow up to absurd rates.
+  function npvAt(rate){
+    let npv=0;
+    for(let t=0;t<cf.length;t++) npv += cf[t]/Math.pow(1+rate,t);
+    return npv;
+  }
+  let lo=-0.9, hi=1;
+  let flo=npvAt(lo), fhi=npvAt(hi);
+  let guard=0;
+  while(flo*fhi>0 && guard<60){
+    hi*=2; fhi=npvAt(hi); guard++;
+    if(hi>1e6) break;
+  }
+  if(flo*fhi>0){
+    lo=-0.999; flo=npvAt(lo);
+  }
+  if(flo*fhi>0) return NaN;
+  for(let i=0;i<200;i++){
+    const mid=(lo+hi)/2;
+    const fmid=npvAt(mid);
+    if(Math.abs(fmid)<1e-6 || (hi-lo)<1e-12) return mid;
+    if(flo*fmid<0){ hi=mid; fhi=fmid; } else { lo=mid; flo=fmid; }
+  }
+  return (lo+hi)/2;
+}
+function npvCalc(rate, cfFrom1){
+  let s=0;
+  for(let t=0;t<cfFrom1.length;t++) s += cfFrom1[t]/Math.pow(1+rate,t+1);
+  return s;
+}
+
+/* ============================= CORE MODEL ============================= */
+function runModel(p){
+  // p: {b1 (bool: SIM assume custo), b2, comissaoParceiroPct, b3, precoTeste, b4, comissaoCondPct, b5, ciclosTeste}
+  const torres = [0].concat(TORRES);
+  const novasTorres = new Array(N+1).fill(0);
+  for(let m=1;m<=N;m++) novasTorres[m] = torres[m]-torres[m-1];
+
+  const factor0 = 1-C.RampAdesaoInicial;
+  const step = factor0/(C.RampAdesaoMeses-1);
+  function deficit(m){
+    let total=0;
+    for(let k=0;k<3;k++){
+      const i=m-k;
+      if(i>=1){
+        const f = Math.max(0, factor0-k*step);
+        total += novasTorres[i]*f;
+      }
+    }
+    return total;
+  }
+
+  const ebitdaAtual = new Array(N+1).fill(0);
+  const ebitdaMK4U = new Array(N+1).fill(0);
+  const ebitdaGlobal = new Array(N+1).fill(0);
+  const resultLiqOperGlobal = new Array(N+1).fill(0);
+  const capexTotalArr = new Array(N+1).fill(0);
+  const pmtCarta = new Array(N+1).fill(0);
+  const saldoLance = new Array(N+1).fill(0);
+
+  let cumCapexEquip = 0;
+
+  for(let m=1; m<=N; m++){
+    const yearIdx = Math.floor((m-1)/12);
+    const infAnual = Math.pow(1+C.InflacaoAnual, yearIdx);
+    const infCustos = Math.pow(1+C.InflacaoCustos, yearIdx);
+
+    const torresEquiv = torres[m]-deficit(m);
+    const ciclosMK4U = torresEquiv * (p.b5 ? p.ciclosTeste*C.MaquinasPorTorre*30 : C.CiclosTorreMes);
+    const precoCicloM = (p.b3 ? p.precoTeste : C.PrecoCiclo) * infAnual;
+    const receitaBrutaMK4U = ciclosMK4U*precoCicloM;
+    const impostosMK4U = -receitaBrutaMK4U*C.ImpostosPct;
+    const comissaoCond = -receitaBrutaMK4U*p.comissaoCondPct*(p.b4?1:0);
+    const feeMK4U = -receitaBrutaMK4U*C.FeeMK4UPct;
+    const receitaLiqMK4U = receitaBrutaMK4U+impostosMK4U;
+    const quimico = -ciclosMK4U*C.MixLavagem*C.CustoQuimico*infCustos;
+    const aguaLuz = -(ciclosMK4U*C.MixLavagem*(C.CustoAgua+C.CustoLuzLavagem)*infCustos + ciclosMK4U*(1-C.MixLavagem)*C.CustoLuzSecagem*infCustos) * (p.b1?1:0);
+    const cmvMK4U = quimico+aguaLuz;
+    const lucroBrutoMK4U = receitaLiqMK4U+cmvMK4U+comissaoCond+feeMK4U;
+    const comissaoParceiro = -receitaBrutaMK4U*p.comissaoParceiroPct*(p.b2?1:0);
+    ebitdaMK4U[m] = lucroBrutoMK4U+comissaoParceiro;
+
+    const maquinasMK4U = torres[m]*C.MaquinasPorTorre;
+    const maquinasTotal = 78+maquinasMK4U;
+    const blocos = Math.max(Math.ceil(maquinasTotal/150)-Math.ceil(78/150), 0);
+    const opexIncremental = -blocos*C.CustoBloco150;
+
+    const capexEquipObra = novasTorres[m]*C.CapexTorreTotal*infCustos;
+    const novosCondos = novasTorres[m]>0 ? Math.ceil(novasTorres[m]/C.TorresPorCondo) : 0;
+    const taxaOrig = novosCondos*C.TaxaFixaMK4U;
+    capexTotalArr[m] = capexEquipObra+taxaOrig;
+
+    cumCapexEquip += capexEquipObra;
+    const depreciacao = -cumCapexEquip*(C.CapexTorreEquip/C.CapexTorreTotal)/C.PeriodoDeprecMeses;
+    const lucroLiqMK4U = ebitdaMK4U[m]+depreciacao; // IR/CSLL = 0
+
+    const cartaConsorcio = novasTorres[m]*C.PrecoTorreConsorcio*infCustos;
+    const lance = cartaConsorcio*C.LancePct;
+    const saldoFinanciado = cartaConsorcio*C.SaldoConsorcioPct;
+    pmtCarta[m] = saldoFinanciado>0 ? saldoFinanciado*C.TaxaConsorcioAM/(1-Math.pow(1+C.TaxaConsorcioAM,-C.PrazoConsorcioMeses)) : 0;
+    let pmtTotal=0;
+    for(let i=Math.max(1,m-C.PrazoConsorcioMeses+1); i<=m; i++) pmtTotal+=pmtCarta[i];
+    saldoLance[m] = saldoLance[m-1]+lance;
+    const jurosLance = saldoLance[m-1]*C.TaxaEmprestimoLanceAM;
+    const necessidadeCaixa = pmtTotal+jurosLance;
+    const resultOperMK4U = lucroLiqMK4U-necessidadeCaixa;
+
+    // Estratégia Atual (fixa: 78 máquinas)
+    const receitaAtual = 90000*infAnual;
+    const impostosAtual = -receitaAtual*C.ImpostosPct;
+    const ciclosAtual = 78*(C.CiclosTorreMes/C.MaquinasPorTorre);
+    const quimicoAtual = -ciclosAtual*C.MixLavagem*C.CustoQuimico*infCustos;
+    const fullAguaLuzAtual = (ciclosAtual*C.MixLavagem*(C.CustoAgua+C.CustoLuzLavagem)*infCustos + ciclosAtual*(1-C.MixLavagem)*C.CustoLuzSecagem*infCustos);
+    const aguaLuzAtual = -fullAguaLuzAtual*(p.b1?1:0);
+    const manutRes = MANUT_ANCHOR[m-1]*infCustos - quimicoAtual - fullAguaLuzAtual;
+    const cmvAtual = quimicoAtual+aguaLuzAtual+manutRes;
+    const opexAtual = -27613.25;
+    ebitdaAtual[m] = receitaAtual+impostosAtual+cmvAtual+opexAtual;
+
+    const proLabore = -(m<=3?15000 : m<=6?30000 : m<=12?35000 : 40000);
+    ebitdaGlobal[m] = ebitdaAtual[m]+ebitdaMK4U[m]+proLabore+opexIncremental;
+    resultLiqOperGlobal[m] = ebitdaAtual[m]+resultOperMK4U+proLabore+opexIncremental;
+  }
+
+  const unleveredFCF = [];
+  for(let m=1;m<=N;m++) unleveredFCF.push(ebitdaGlobal[m]-capexTotalArr[m]);
+  let ebitdaAno5=0;
+  for(let m=49;m<=60;m++) ebitdaAno5+=ebitdaGlobal[m];
+
+  function scenario(mult){
+    const cf=[0].concat(unleveredFCF);
+    cf[cf.length-1] += mult*ebitdaAno5;
+    const tirm = irrMonthly(cf);
+    const tira = Math.pow(1+tirm,12)-1;
+    const vpl = npvCalc(C.WACC_AM, cf.slice(1))+cf[0];
+    let investido=0, recebido=0;
+    cf.forEach(c=>{ if(c<0) investido+=-c; else recebido+=c; });
+    const moic = recebido/investido;
+    let cum=0, payback=0;
+    for(let t=1;t<cf.length;t++){ cum+=cf[t]; if(cum<0) payback++; }
+    // discounted payback (uses same WACC monthly rate)
+    let cumD=0, paybackD=0;
+    for(let t=1;t<cf.length;t++){ cumD+= cf[t]/Math.pow(1+C.WACC_AM,t); if(cumD<0) paybackD++; }
+    return { tir:tira, vpl, moic, payback, paybackD, investido, recebido, valorTerminal: mult*ebitdaAno5, cumSeries: (function(){const arr=[];let s=0;for(let t=1;t<cf.length;t++){s+=cf[t]; arr.push(s);} return arr;})() };
+  }
+
+  return {
+    ebitdaAno5, ebitdaAtual: ebitdaAtual.slice(1), ebitdaMK4U: ebitdaMK4U.slice(1), ebitdaGlobal: ebitdaGlobal.slice(1),
+    cons: scenario(C.MultConserv), base: scenario(C.MultBase), otim: scenario(C.MultOtim)
+  };
+}
+
+/* ============================= UI STATE ============================= */
+const DEFAULTS = {
+  b1:false, b2:true, comissaoParceiroPct:0.05, b3:false, precoTeste:15,
+  b4:true, comissaoCondPct:0.10, b5:false, ciclosTeste:4
+};
+let state = Object.assign({}, DEFAULTS);
+
+const fmtBRL = n => n.toLocaleString('pt-BR', {style:'currency', currency:'BRL', maximumFractionDigits:0});
+const fmtBRL2 = n => n.toLocaleString('pt-BR', {style:'currency', currency:'BRL', maximumFractionDigits:2});
+const fmtPct = n => (n*100).toLocaleString('pt-BR', {maximumFractionDigits:1})+'%';
+const fmtX = n => n.toLocaleString('pt-BR', {maximumFractionDigits:2})+'x';
+
+/* ============================= CONTROLS RENDER ============================= */
+const controlsSpec = [
+  {
+    key:'b1', title:'Botão 1 — Reembolso de água e luz',
+    desc:'SIM = LAVAI assume o custo de água/luz (aparece no CMV). NÃO = condomínio/parceiro reembolsa (custo zerado).',
+  },
+  {
+    key:'b2', title:'Botão 2 — Comissão do parceiro MK4U', numKey:'comissaoParceiroPct', numLabel:'% sobre a receita bruta', numStep:0.5, numMult:100, numSuffix:'%',
+    desc:'Comissão paga ao parceiro MK4U sobre a Receita Bruta MK4U.',
+  },
+  {
+    key:'b3', title:'Botão 3 — Preço de ciclo alternativo', numKey:'precoTeste', numLabel:'Preço de teste, R$/ciclo', numStep:0.5, numMult:1, numSuffix:'',
+    desc:'Testa um preço/ciclo diferente do padrão (R$13). Cresce pela mesma inflação anual do preço base.',
+  },
+  {
+    key:'b4', title:'Botão 4 — Comissão condomínio', numKey:'comissaoCondPct', numLabel:'% sobre a receita bruta MK4U', numStep:0.5, numMult:100, numSuffix:'%',
+    desc:'SIM = comissão cobrada normalmente. NÃO = condomínio abre mão da comissão (zerada).',
+  },
+  {
+    key:'b5', title:'Botão 5 — Ciclos por máquina/dia', numKey:'ciclosTeste', numLabel:'Ciclos/dia/máquina de teste', numStep:0.1, numMult:1, numSuffix:'',
+    desc:'Testa um número de ciclos por máquina por dia diferente do padrão (3,5).',
+  },
+];
+
+const controlsEl = document.getElementById('controls');
+controlsSpec.forEach(spec=>{
+  const card = document.createElement('div');
+  card.className='control-card';
+  const onLabel = 'SIM', offLabel='NÃO';
+  card.innerHTML = `
+    <div>
+      <div class="ctitle">${spec.title}</div>
+      <div class="cdesc">${spec.desc}</div>
+    </div>
+    <div class="toggle-row">
+      <span class="switch-label" data-role="offlabel">${offLabel}</span>
+      <button class="switch" data-key="${spec.key}" role="switch" aria-checked="false"></button>
+      <span class="switch-label" data-role="onlabel">${onLabel}</span>
+    </div>
+    ${spec.numKey ? `<div class="num-field" data-numwrap="${spec.numKey}">
+      <label for="in-${spec.numKey}">${spec.numLabel}</label>
+      <input id="in-${spec.numKey}" type="number" step="${spec.numStep}" data-numkey="${spec.numKey}" data-nummult="${spec.numMult}">
+    </div>` : ''}
+  `;
+  controlsEl.appendChild(card);
+});
+
+function syncControlsFromState(){
+  controlsSpec.forEach(spec=>{
+    const btn = controlsEl.querySelector(`.switch[data-key="${spec.key}"]`);
+    const on = !!state[spec.key];
+    btn.dataset.on = on;
+    btn.setAttribute('aria-checked', on);
+    const card = btn.closest('.control-card');
+    card.querySelector('[data-role="onlabel"]').dataset.on = on;
+    card.querySelector('[data-role="offlabel"]').dataset.on = !on;
+    if(spec.numKey){
+      const input = document.getElementById('in-'+spec.numKey);
+      input.value = state[spec.numKey]*spec.numMult;
+    }
+  });
+}
+
+controlsEl.addEventListener('click', e=>{
+  const btn = e.target.closest('.switch');
+  if(!btn) return;
+  const key = btn.dataset.key;
+  state[key] = !state[key];
+  syncControlsFromState();
+  update();
+});
+controlsEl.addEventListener('input', e=>{
+  const input = e.target.closest('input[data-numkey]');
+  if(!input) return;
+  const key = input.dataset.numkey;
+  const mult = parseFloat(input.dataset.nummult);
+  const v = parseFloat(input.value);
+  if(!isNaN(v)) state[key] = v/mult;
+  update();
+});
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  state = Object.assign({}, DEFAULTS);
+  syncControlsFromState();
+  update();
+});
+
+/* ============================= KPI + SCENARIO RENDER ============================= */
+const kpisEl = document.getElementById('kpis');
+const scenariosEl = document.getElementById('scenarios');
+
+function kpiTile(label, value, cls, foot){
+  return `<div class="kpi"><div class="label">${label}</div><div class="value ${cls||''}">${value}</div>${foot?`<div class="foot">${foot}</div>`:''}</div>`;
+}
+
+/* ---- lightweight SVG chart helpers (no external chart library needed) ---- */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs){
+  const el = document.createElementNS(SVG_NS, tag);
+  for(const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function niceStep(maxAbs){
+  if(maxAbs<=0) return 1;
+  const rough = maxAbs/4;
+  const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+  const norm = rough/mag;
+  const step = (norm<1.5?1: norm<3?2: norm<7?5:10)*mag;
+  return step;
+}
+function fmtCompactBRL(n){
+  const abs=Math.abs(n);
+  if(abs>=1e6) return (n/1e6).toLocaleString('pt-BR',{maximumFractionDigits:1})+'M';
+  if(abs>=1e3) return (n/1e3).toLocaleString('pt-BR',{maximumFractionDigits:0})+'k';
+  return n.toLocaleString('pt-BR',{maximumFractionDigits:0});
+}
+
+function drawLineChart(svg, data, opts){
+  while(svg.firstChild) svg.removeChild(svg.firstChild);
+  const W=600, H=260, padL=52, padR=14, padT=14, padB=26;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const n=data.length;
+  const maxV=Math.max(0,...data), minV=Math.min(0,...data);
+  const step=niceStep(Math.max(Math.abs(maxV),Math.abs(minV))||1);
+  const top=Math.ceil(maxV/step)*step || step;
+  const bottom=Math.floor(minV/step)*step;
+  const range=(top-bottom)||1;
+  const x=i=>padL+(i/(n-1))*plotW;
+  const y=v=>padT+plotH-((v-bottom)/range)*plotH;
+
+  // gridlines + y labels
+  for(let gv=bottom; gv<=top+1e-6; gv+=step){
+    const gy=y(gv);
+    svg.appendChild(svgEl('line',{x1:padL,y1:gy,x2:W-padR,y2:gy,stroke:opts.grid,'stroke-width':1}));
+    const t=svgEl('text',{x:padL-8,y:gy+4,'text-anchor':'end','font-size':10,fill:opts.text});
+    t.textContent = opts.currency ? fmtCompactBRL(gv) : gv;
+    svg.appendChild(t);
+  }
+  // zero line emphasis
+  if(bottom<0 && top>0){
+    const gy=y(0);
+    svg.appendChild(svgEl('line',{x1:padL,y1:gy,x2:W-padR,y2:gy,stroke:opts.text,'stroke-width':1,'stroke-dasharray':'3,3','stroke-opacity':.5}));
+  }
+  // area fill
+  let dPath=`M ${x(0)} ${y(data[0])}`;
+  for(let i=1;i<n;i++) dPath+=` L ${x(i)} ${y(data[i])}`;
+  const areaPath=dPath+` L ${x(n-1)} ${y(bottom<0?0:bottom)} L ${x(0)} ${y(bottom<0?0:bottom)} Z`;
+  svg.appendChild(svgEl('path',{d:areaPath, fill:opts.color, 'fill-opacity':.16, stroke:'none'}));
+  svg.appendChild(svgEl('path',{d:dPath, fill:'none', stroke:opts.color, 'stroke-width':2.2, 'stroke-linejoin':'round'}));
+
+  // payback marker
+  if(opts.markerIndex!=null && opts.markerIndex<n){
+    const mx=x(opts.markerIndex), my=y(data[opts.markerIndex]);
+    svg.appendChild(svgEl('line',{x1:mx,y1:padT,x2:mx,y2:H-padB,stroke:opts.accent2,'stroke-width':1.2,'stroke-dasharray':'4,3'}));
+    svg.appendChild(svgEl('circle',{cx:mx,cy:my,r:4,fill:opts.accent2}));
+    const lbl=svgEl('text',{x:mx, y:padT+11, 'text-anchor': opts.markerIndex>n*0.75?'end':'start', 'font-size':10,'font-weight':700, fill:opts.accent2});
+    lbl.textContent='Payback: mês '+(opts.markerIndex+1);
+    svg.appendChild(lbl);
+  }
+  // x labels (start / mid / end)
+  [0, Math.floor((n-1)/2), n-1].forEach(i=>{
+    const t=svgEl('text',{x:x(i), y:H-8, 'text-anchor': i===0?'start':i===n-1?'end':'middle','font-size':10,fill:opts.text});
+    t.textContent='Mês '+(i+1);
+    svg.appendChild(t);
+  });
+  // hover target (invisible rects with <title> tooltips)
+  const bw=plotW/n;
+  for(let i=0;i<n;i++){
+    const r=svgEl('rect',{x:padL+i*bw, y:padT, width:bw, height:plotH, fill:'transparent'});
+    const title=svgEl('title',{});
+    title.textContent = 'Mês '+(i+1)+': '+fmtBRL(data[i]);
+    r.appendChild(title);
+    svg.appendChild(r);
+  }
+}
+
+function drawStackedBarChart(svg, seriesA, seriesB, opts){
+  while(svg.firstChild) svg.removeChild(svg.firstChild);
+  const W=600, H=260, padL=52, padR=14, padT=14, padB=26;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const n=seriesA.length;
+  const totals=seriesA.map((v,i)=>v+seriesB[i]);
+  const maxV=Math.max(0,...totals);
+  const step=niceStep(maxV||1);
+  const top=Math.ceil(maxV/step)*step || step;
+  const y=v=>padT+plotH-(v/top)*plotH;
+  const bw=plotW/n;
+
+  for(let gv=0; gv<=top+1e-6; gv+=step){
+    const gy=y(gv);
+    svg.appendChild(svgEl('line',{x1:padL,y1:gy,x2:W-padR,y2:gy,stroke:opts.grid,'stroke-width':1}));
+    const t=svgEl('text',{x:padL-8,y:gy+4,'text-anchor':'end','font-size':10,fill:opts.text});
+    t.textContent=fmtCompactBRL(gv);
+    svg.appendChild(t);
+  }
+
+  for(let i=0;i<n;i++){
+    const xPos=padL+i*bw+bw*0.12;
+    const barW=bw*0.76;
+    const h1=plotH-(y(seriesA[i])-padT);
+    const y1=y(seriesA[i]);
+    svg.appendChild(svgEl('rect',{x:xPos, y:y1, width:barW, height:Math.max(0,h1), fill:opts.color2}));
+    const h2=y1-y(totals[i]);
+    svg.appendChild(svgEl('rect',{x:xPos, y:y(totals[i]), width:barW, height:Math.max(0,h2), fill:opts.color}));
+    const title=svgEl('title',{});
+    title.textContent='Mês '+(i+1)+' — Atual: '+fmtBRL(seriesA[i])+' | MK4U: '+fmtBRL(seriesB[i]);
+    const hitbox=svgEl('rect',{x:padL+i*bw, y:padT, width:bw, height:plotH, fill:'transparent'});
+    hitbox.appendChild(title);
+    svg.appendChild(hitbox);
+  }
+  [0, Math.floor((n-1)/2), n-1].forEach(i=>{
+    const t=svgEl('text',{x:padL+i*bw+bw/2, y:H-8, 'text-anchor':'middle','font-size':10,fill:opts.text});
+    t.textContent='Mês '+(i+1);
+    svg.appendChild(t);
+  });
+}
+
+function update(){
+  const r = runModel(state);
+  const base = r.base;
+
+  kpisEl.innerHTML = [
+    kpiTile('TIR anualizada', fmtPct(base.tir), base.tir>=0?'pos':'neg', 'Equivalente composta, projeto não alavancado'),
+    kpiTile('VPL (WACC 20% a.a.)', fmtBRL(base.vpl), base.vpl>=0?'pos':'neg', 'Valor presente líquido, hoje'),
+    kpiTile('Payback simples', base.payback+' meses', '', '≈ '+(base.payback/12).toFixed(1)+' anos'),
+    kpiTile('Payback descontado', base.paybackD+' meses', '', '≈ '+(base.paybackD/12).toFixed(1)+' anos'),
+    kpiTile('MOIC (Base)', fmtX(base.moic), 'pos', 'Múltiplo sobre o capital investido'),
+    kpiTile('EBITDA Ano 5', fmtBRL(r.ebitdaAno5), '', 'Últimos 12 meses, referência de saída'),
+  ].join('');
+
+  const scenarioDefs = [
+    {key:'cons', label:'Conservador', mult:C.MultConserv},
+    {key:'base', label:'Base', mult:C.MultBase},
+    {key:'otim', label:'Otimista', mult:C.MultOtim},
+  ];
+  scenariosEl.innerHTML = scenarioDefs.map(s=>{
+    const d = r[s.key];
+    return `<div class="scenario-card ${s.key==='base'?'is-base':''}">
+      <div class="stag">${s.label}</div>
+      <div class="mult">Múltiplo EV/EBITDA: ${s.mult}x</div>
+      <div class="scenario-row"><span class="k">Valor Terminal</span><span class="v">${fmtBRL(d.valorTerminal)}</span></div>
+      <div class="scenario-row"><span class="k">TIR anualizada</span><span class="v">${fmtPct(d.tir)}</span></div>
+      <div class="scenario-row"><span class="k">MOIC</span><span class="v">${fmtX(d.moic)}</span></div>
+      <div class="scenario-row"><span class="k">Total recebido</span><span class="v">${fmtBRL(d.recebido)}</span></div>
+    </div>`;
+  }).join('');
+
+  const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--border').trim();
+  const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+  const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+  const accent2Color = getComputedStyle(document.documentElement).getPropertyValue('--accent-2').trim();
+
+  drawLineChart(document.getElementById('cashChart'), base.cumSeries, {
+    grid:gridColor, text:textColor, color:accentColor, accent2:accent2Color,
+    markerIndex: (base.payback!=null && base.payback>0 && base.payback<=60) ? base.payback-1 : null,
+    currency:true,
+  });
+
+  drawStackedBarChart(document.getElementById('ebitdaChart'), r.ebitdaAtual, r.ebitdaMK4U, {
+    grid:gridColor, text:textColor, color:accentColor, color2:accent2Color,
+  });
+
+  const legendEl = document.getElementById('ebitdaLegend');
+  if(legendEl){
+    legendEl.innerHTML = `<span><i style="background:${accent2Color}"></i>Estratégia Atual</span><span><i style="background:${accentColor}"></i>Estratégia MK4U</span>`;
+  }
+}
+
+syncControlsFromState();
+update();
+
+})();
+</script>
+
+</body>
+</html>
