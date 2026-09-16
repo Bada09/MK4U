@@ -203,6 +203,32 @@ footer.note strong{ color:var(--text); }
 .section-title{ margin:30px 0 12px; display:flex; align-items:baseline; gap:10px; }
 .section-title h2{ font-size:19px; }
 .section-title .n{ font-family:"IBM Plex Mono",monospace; color:var(--accent); font-size:13px; font-weight:700; }
+
+/* Tabs */
+.tabbar{ display:flex; flex-wrap:wrap; gap:6px; margin:22px 0 18px; border-bottom:1px solid var(--border); padding-bottom:0; }
+.tab-btn{ font:inherit; font-family:"IBM Plex Sans",sans-serif; font-weight:600; font-size:13.5px; color:var(--text-muted);
+  background:none; border:none; padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; }
+.tab-btn:hover{ color:var(--text); }
+.tab-btn.active{ color:var(--accent-strong); border-bottom-color:var(--accent); }
+.tab-panel{ display:none; }
+.tab-panel.active{ display:block; }
+
+/* Data tables (sheet replicas) */
+.table-scroll{ width:100%; overflow-x:auto; border:1px solid var(--border); border-radius:10px; background:var(--surface); }
+table.sheet{ border-collapse:collapse; width:100%; min-width:1200px; font-size:12.5px; font-family:"IBM Plex Mono",monospace; }
+table.sheet th, table.sheet td{ padding:6px 10px; text-align:right; white-space:nowrap; border-bottom:1px solid var(--border); }
+table.sheet thead th{ position:sticky; top:0; background:var(--surface-2); color:var(--text-muted); font-weight:600; z-index:1; }
+table.sheet td.rowlabel, table.sheet th.rowlabel{ position:sticky; left:0; background:var(--surface); text-align:left;
+  font-family:"IBM Plex Sans",sans-serif; font-size:12.5px; white-space:normal; min-width:220px; max-width:320px;
+  overflow-wrap:break-word; border-right:1px solid var(--border); z-index:1; }
+table.sheet thead th.rowlabel{ background:var(--surface-2); z-index:2; }
+table.sheet tr.section-row td{ background:var(--surface-2); font-weight:700; color:var(--accent-strong);
+  font-family:"IBM Plex Sans",sans-serif; text-align:left; position:sticky; left:0; }
+table.sheet tr.total-row td{ font-weight:700; color:var(--text); border-top:1px solid var(--border); }
+table.sheet tr.total-row td.rowlabel{ color:var(--text); }
+table.sheet td.neg{ color:var(--negative); }
+table.sheet td.pos{ color:var(--positive); }
+.sheet-note{ margin-top:10px; }
 </style>
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
@@ -221,40 +247,89 @@ footer.note strong{ color:var(--text); }
     <span class="badge-live"><span class="dot"></span>Recalcula em tempo real</span>
   </header>
 
-  <!-- CONTROLS -->
-  <section class="panel">
-    <h2>Painel de simulação — botões</h2>
-    <div class="sub">Estratégia Global = Estratégia Atual (78 máquinas, fixa) + Estratégia MK4U (torres em condomínios, cronograma de instalação da planilha).</div>
-    <div class="controls-grid" id="controls"></div>
-    <div class="reset-row"><button class="reset" id="resetBtn">Restaurar padrão da planilha</button></div>
-  </section>
+  <!-- TABS -->
+  <nav class="tabbar" id="tabbar">
+    <button class="tab-btn active" data-tab="valuation">Valuation</button>
+    <button class="tab-btn" data-tab="opmk4u">Operação MK4U</button>
+    <button class="tab-btn" data-tab="opcons">Operação Consolidada</button>
+    <button class="tab-btn" data-tab="dremensal">DRE Mensal</button>
+    <button class="tab-btn" data-tab="dreanual">DRE Anual</button>
+  </nav>
 
-  <!-- KPIs -->
-  <div class="section-title"><h2>Retorno do investidor</h2><span class="n">Cenário Base</span></div>
-  <div class="grid kpi-grid" id="kpis"></div>
+  <!-- TAB: VALUATION -->
+  <div class="tab-panel active" id="tab-valuation">
 
-  <!-- Scenarios -->
-  <div class="section-title"><h2>Valor terminal na saída (mês 60)</h2><span class="n">3 cenários</span></div>
-  <div class="grid scenario-grid" id="scenarios"></div>
+    <!-- CONTROLS -->
+    <section class="panel">
+      <h2>Painel de simulação — botões</h2>
+      <div class="sub">Estratégia Global = Estratégia Atual (78 máquinas, fixa) + Estratégia MK4U (torres em condomínios, cronograma de instalação da planilha).</div>
+      <div class="controls-grid" id="controls"></div>
+      <div class="reset-row"><button class="reset" id="resetBtn">Restaurar padrão da planilha</button></div>
+    </section>
 
-  <!-- Charts -->
-  <div class="section-title"><h2>Evolução dos 60 meses</h2></div>
-  <div class="grid two-col">
-    <div class="panel chart-card">
-      <h2>Fluxo de caixa acumulado do investidor</h2>
-      <div class="sub">Projeto não alavancado, cenário Base — o mês em que a curva cruza zero é o payback simples.</div>
-      <div class="chart-svg-wrap"><svg id="cashChart" viewBox="0 0 600 260" preserveAspectRatio="xMidYMid meet"></svg></div>
+    <!-- KPIs -->
+    <div class="section-title"><h2>Retorno do investidor</h2><span class="n">Cenário Base</span></div>
+    <div class="grid kpi-grid" id="kpis"></div>
+
+    <!-- Scenarios -->
+    <div class="section-title"><h2>Valor terminal na saída (mês 60)</h2><span class="n">3 cenários</span></div>
+    <div class="grid scenario-grid" id="scenarios"></div>
+
+    <!-- Charts -->
+    <div class="section-title"><h2>Evolução dos 60 meses</h2></div>
+    <div class="grid two-col">
+      <div class="panel chart-card">
+        <h2>Fluxo de caixa acumulado do investidor</h2>
+        <div class="sub">Projeto não alavancado, cenário Base — o mês em que a curva cruza zero é o payback simples.</div>
+        <div class="chart-svg-wrap"><svg id="cashChart" viewBox="0 0 600 260" preserveAspectRatio="xMidYMid meet"></svg></div>
+      </div>
+      <div class="panel chart-card">
+        <h2>EBITDA Global mensal</h2>
+        <div class="sub">Decomposto entre Estratégia Atual (estável) e Estratégia MK4U (cresce com as torres).</div>
+        <div class="chart-svg-wrap"><svg id="ebitdaChart" viewBox="0 0 600 260" preserveAspectRatio="xMidYMid meet"></svg></div>
+        <div class="chart-legend" id="ebitdaLegend"></div>
+      </div>
     </div>
-    <div class="panel chart-card">
-      <h2>EBITDA Global mensal</h2>
-      <div class="sub">Decomposto entre Estratégia Atual (estável) e Estratégia MK4U (cresce com as torres).</div>
-      <div class="chart-svg-wrap"><svg id="ebitdaChart" viewBox="0 0 600 260" preserveAspectRatio="xMidYMid meet"></svg></div>
-      <div class="chart-legend" id="ebitdaLegend"></div>
+  </div>
+
+  <!-- TAB: OPERAÇÃO MK4U -->
+  <div class="tab-panel" id="tab-opmk4u">
+    <div class="section-title"><h2>Operação — Estratégia MK4U</h2><span class="n">mês a mês, 60 meses</span></div>
+    <div class="panel">
+      <div class="sub">Replica a aba <span class="mono">Operação_Estrategia_MK4U</span> — torres, receita, custos, EBITDA, CAPEX e financiamento via consórcio da Estratégia MK4U.</div>
+      <div class="table-scroll"><table class="sheet" id="tbl-opmk4u"></table></div>
+    </div>
+  </div>
+
+  <!-- TAB: OPERAÇÃO CONSOLIDADA -->
+  <div class="tab-panel" id="tab-opcons">
+    <div class="section-title"><h2>Operação Consolidada — Resultado Global</h2><span class="n">mês a mês, 60 meses</span></div>
+    <div class="panel">
+      <div class="sub">Replica a aba <span class="mono">Operação_Consolidada</span> — soma da Estratégia Atual (78 máquinas fixas) com a Estratégia MK4U.</div>
+      <div class="table-scroll"><table class="sheet" id="tbl-opcons"></table></div>
+    </div>
+  </div>
+
+  <!-- TAB: DRE MENSAL -->
+  <div class="tab-panel" id="tab-dremensal">
+    <div class="section-title"><h2>DRE Geral Mensal</h2><span class="n">mês a mês, 60 meses</span></div>
+    <div class="panel">
+      <div class="sub">Replica a aba <span class="mono">DRE_Geral_Mensal</span> — demonstração de resultado da empresa consolidada (Atual + MK4U).</div>
+      <div class="table-scroll"><table class="sheet" id="tbl-dremensal"></table></div>
+    </div>
+  </div>
+
+  <!-- TAB: DRE ANUAL -->
+  <div class="tab-panel" id="tab-dreanual">
+    <div class="section-title"><h2>DRE Geral Anual</h2><span class="n">5 anos</span></div>
+    <div class="panel">
+      <div class="sub">Replica a aba <span class="mono">DRE_Geral_Anual</span> — cada ano soma os 12 meses correspondentes da DRE Mensal.</div>
+      <div class="table-scroll"><table class="sheet" id="tbl-dreanual"></table></div>
     </div>
   </div>
 
   <footer class="note">
-    <strong>Metodologia:</strong> replica as fórmulas da planilha <span class="mono">LAVAI_MK4U_UnitEconomics_Global_5anos.xlsx</span> (abas Premissas, Operação_Estrategia_MK4U, PL_Global_Consolidado_60m, Operação_Consolidada e Valuation_Investidores) — validado célula a célula contra o recálculo da planilha para múltiplas combinações de botões. Fluxo de caixa do investidor = EBITDA Global − CAPEX de torres (projeto não alavancado, como no cenário "C" da aba Valuation). Payback simples conta meses de fluxo acumulado negativo; TIR e VPL usam a taxa de desconto mensal equivalente ao WACC de 20% a.a. da aba Valuation. Premissas fixas nesta ferramenta (não controladas pelos botões): cronograma de instalação de torres, impostos (PIS+COFINS 9,25%), inflação anual (10% receita / 5% custos), depreciação em 120 meses e financiamento via consórcio. Ferramenta de apoio — a planilha permanece a fonte oficial.
+    <strong>Metodologia:</strong> replica as fórmulas da planilha <span class="mono">LAVAI_MK4U_UnitEconomics_Global_5anos.xlsx</span> (abas Premissas, Operação_Estrategia_MK4U, PL_Global_Consolidado_60m, Operação_Consolidada, DRE_Geral_Mensal, DRE_Geral_Anual e Valuation_Investidores) — validado célula a célula contra o recálculo da planilha para múltiplas combinações de botões. Fluxo de caixa do investidor = EBITDA Global − CAPEX de torres (projeto não alavancado, como no cenário "C" da aba Valuation). Payback simples conta meses de fluxo acumulado negativo; TIR e VPL usam a taxa de desconto mensal equivalente ao WACC de 20% a.a. da aba Valuation. Premissas fixas nesta ferramenta (não controladas pelos botões): cronograma de instalação de torres, impostos (PIS+COFINS 9,25%), inflação anual (10% receita / 5% custos), depreciação em 120 meses e financiamento via consórcio. Ferramenta de apoio — a planilha permanece a fonte oficial.
   </footer>
 </div>
 
@@ -265,7 +340,7 @@ footer.note strong{ color:var(--text); }
 /* ============================= MODEL CONSTANTS (from Premissas) ============================= */
 const C = {
   CustoAgua:0.77, CustoLuzLavagem:0.18, CustoLuzSecagem:1.43, CustoQuimico:0.52, MixLavagem:0.61,
-  ImpostosPct:0.0925,
+  ImpostosPct:0.0925, RoyaltiesPct:0.027,
   FeeMK4UPct:0.05, TaxaFixaMK4U:5000,
   PrecoCiclo:13, CiclosDiaMaquina:3.5, MaquinasPorTorre:2, TorresPorCondo:2,
   CapexTorreEquip:35000, CapexCondoObra:10000,
@@ -357,6 +432,23 @@ function runModel(p){
   const pmtCarta = new Array(N+1).fill(0);
   const saldoLance = new Array(N+1).fill(0);
 
+  // Detailed monthly line items, mirroring the Excel tabs Operação_Estrategia_MK4U,
+  // Operação_Consolidada and DRE_Geral_Mensal — one push per month, in order.
+  const om = {torres:[],maquinas:[],condominios:[],novasTorres:[],ciclos:[],precoCiclo:[],receitaBruta:[],
+    impostos:[],comissaoCond:[],feeMK4U:[],receitaLiquida:[],quimico:[],aguaLuz:[],cmvTotal:[],lucroBruto:[],
+    margemContrib:[],opexIncremental:[],comissaoParceiro:[],ebitda:[],margemEbitda:[],depreciacao:[],
+    lucroAntesImpostos:[],lucroLiquido:[],capexEquipObra:[],novosCondos:[],taxaOrigem:[],capexTotal:[],
+    cartaConsorcio:[],lance:[],saldoFinanciado:[],pmtCarta:[],pmtTotal:[],saldoLance:[],jurosLance:[],
+    necessidadeCaixa:[],comparacaoCapex:[],resultLiqOperacional:[],deficitAdesao:[],torresEquiv:[],pctAdesao:[]};
+  const oc = {maquinasAtual:[],maquinasMK4U:[],maquinasTotal:[],torresMK4U:[],receitaAtual:[],receitaMK4U:[],
+    receitaGlobal:[],impostosAtual:[],impostosMK4U:[],royaltiesAtual:[],comissaoCond:[],feeMK4U:[],
+    totalImpostosGlobal:[],cmvAtual:[],cmvMK4U:[],opexAtual:[],opexIncremental:[],proLabore:[],
+    totalCustosGlobal:[],ebitdaAtual:[],ebitdaMK4U:[],ebitdaGlobal:[],margemEbitdaGlobal:[],capexMK4U:[],
+    necessidadeCaixaMK4U:[],lucroLiqMK4U:[],resultLiqOperMK4U:[],resultLiqOperGlobal:[],resultLiqFinalGlobal:[]};
+  const dre = {receitaBrutaMK4U:[],receitaBruta:[],impostos:[],comissoesFees:[],receitaLiquida:[],cmv:[],
+    lucroBruto:[],opex:[],proLabore:[],ebitda:[],margemEbitda:[],depreciacao:[],lair:[],irCsll:[],
+    lucroLiquidoContabil:[],necessidadeCaixaFinanc:[],resultadoFinalCaixa:[]};
+
   let cumCapexEquip = 0;
 
   for(let m=1; m<=N; m++){
@@ -419,6 +511,61 @@ function runModel(p){
     const proLabore = -(m<=3?15000 : m<=6?30000 : m<=12?35000 : 40000);
     ebitdaGlobal[m] = ebitdaAtual[m]+ebitdaMK4U[m]+proLabore+opexIncremental;
     resultLiqOperGlobal[m] = ebitdaAtual[m]+resultOperMK4U+proLabore+opexIncremental;
+
+    // ---- Operação_Estrategia_MK4U (om) ----
+    om.torres.push(torres[m]); om.maquinas.push(maquinasMK4U); om.condominios.push(torres[m]/C.TorresPorCondo);
+    om.novasTorres.push(novasTorres[m]); om.ciclos.push(ciclosMK4U); om.precoCiclo.push(precoCicloM);
+    om.receitaBruta.push(receitaBrutaMK4U); om.impostos.push(impostosMK4U); om.comissaoCond.push(comissaoCond);
+    om.feeMK4U.push(feeMK4U); om.receitaLiquida.push(receitaLiqMK4U); om.quimico.push(quimico);
+    om.aguaLuz.push(aguaLuz); om.cmvTotal.push(cmvMK4U); om.lucroBruto.push(lucroBrutoMK4U);
+    om.margemContrib.push(receitaBrutaMK4U!==0 ? lucroBrutoMK4U/receitaBrutaMK4U : 0);
+    om.opexIncremental.push(opexIncremental); om.comissaoParceiro.push(comissaoParceiro);
+    om.ebitda.push(ebitdaMK4U[m]); om.margemEbitda.push(receitaBrutaMK4U!==0 ? ebitdaMK4U[m]/receitaBrutaMK4U : 0);
+    om.depreciacao.push(depreciacao); om.lucroAntesImpostos.push(lucroLiqMK4U); om.lucroLiquido.push(lucroLiqMK4U);
+    om.capexEquipObra.push(capexEquipObra); om.novosCondos.push(novosCondos); om.taxaOrigem.push(taxaOrig);
+    om.capexTotal.push(capexTotalArr[m]); om.cartaConsorcio.push(cartaConsorcio); om.lance.push(lance);
+    om.saldoFinanciado.push(saldoFinanciado); om.pmtCarta.push(pmtCarta[m]); om.pmtTotal.push(pmtTotal);
+    om.saldoLance.push(saldoLance[m]); om.jurosLance.push(jurosLance); om.necessidadeCaixa.push(necessidadeCaixa);
+    om.comparacaoCapex.push(capexEquipObra-necessidadeCaixa); om.resultLiqOperacional.push(resultOperMK4U);
+    om.deficitAdesao.push(deficit(m)); om.torresEquiv.push(torresEquiv);
+    om.pctAdesao.push(torres[m]!==0 ? torresEquiv/torres[m] : 0);
+
+    // ---- Operação_Consolidada (oc) ----
+    const royaltiesAtual = -receitaAtual*C.RoyaltiesPct;
+    const receitaGlobal = receitaAtual+receitaBrutaMK4U;
+    const totalImpostosGlobal = impostosAtual+impostosMK4U+royaltiesAtual+comissaoCond+feeMK4U;
+    const totalCustosGlobal = cmvAtual+cmvMK4U+opexAtual+opexIncremental+proLabore;
+    oc.maquinasAtual.push(78); oc.maquinasMK4U.push(maquinasMK4U); oc.maquinasTotal.push(maquinasTotal);
+    oc.torresMK4U.push(torres[m]); oc.receitaAtual.push(receitaAtual); oc.receitaMK4U.push(receitaBrutaMK4U);
+    oc.receitaGlobal.push(receitaGlobal); oc.impostosAtual.push(impostosAtual); oc.impostosMK4U.push(impostosMK4U);
+    oc.royaltiesAtual.push(royaltiesAtual); oc.comissaoCond.push(comissaoCond); oc.feeMK4U.push(feeMK4U);
+    oc.totalImpostosGlobal.push(totalImpostosGlobal); oc.cmvAtual.push(cmvAtual); oc.cmvMK4U.push(cmvMK4U);
+    oc.opexAtual.push(opexAtual); oc.opexIncremental.push(opexIncremental); oc.proLabore.push(proLabore);
+    oc.totalCustosGlobal.push(totalCustosGlobal); oc.ebitdaAtual.push(ebitdaAtual[m]); oc.ebitdaMK4U.push(ebitdaMK4U[m]);
+    oc.ebitdaGlobal.push(ebitdaGlobal[m]); oc.margemEbitdaGlobal.push(receitaGlobal!==0 ? ebitdaGlobal[m]/receitaGlobal : 0);
+    oc.capexMK4U.push(capexTotalArr[m]); oc.necessidadeCaixaMK4U.push(necessidadeCaixa);
+    oc.lucroLiqMK4U.push(lucroLiqMK4U); oc.resultLiqOperMK4U.push(resultOperMK4U);
+    oc.resultLiqOperGlobal.push(resultLiqOperGlobal[m]); oc.resultLiqFinalGlobal.push(resultLiqOperGlobal[m]);
+
+    // ---- DRE_Geral_Mensal (dre) ----
+    const dreImpostos = impostosAtual+impostosMK4U;
+    const dreComissoesFees = comissaoCond+feeMK4U+comissaoParceiro;
+    const dreReceitaLiq = receitaGlobal+dreImpostos+dreComissoesFees;
+    const dreCmv = cmvAtual+cmvMK4U;
+    const dreLucroBruto = dreReceitaLiq+dreCmv;
+    const dreOpex = opexAtual+opexIncremental;
+    const dreEbitda = dreLucroBruto+dreOpex+proLabore; // === ebitdaGlobal[m]
+    const dreLair = dreEbitda+depreciacao;
+    const dreLucroLiq = dreLair-0;
+    const dreNecessidadeCaixaFinanc = -necessidadeCaixa;
+    const dreResultadoFinal = dreLucroLiq+dreNecessidadeCaixaFinanc;
+    dre.receitaBrutaMK4U.push(receitaBrutaMK4U); dre.receitaBruta.push(receitaGlobal); dre.impostos.push(dreImpostos);
+    dre.comissoesFees.push(dreComissoesFees); dre.receitaLiquida.push(dreReceitaLiq); dre.cmv.push(dreCmv);
+    dre.lucroBruto.push(dreLucroBruto); dre.opex.push(dreOpex); dre.proLabore.push(proLabore);
+    dre.ebitda.push(dreEbitda); dre.margemEbitda.push(receitaGlobal!==0 ? dreEbitda/receitaGlobal : 0);
+    dre.depreciacao.push(depreciacao); dre.lair.push(dreLair); dre.irCsll.push(0);
+    dre.lucroLiquidoContabil.push(dreLucroLiq); dre.necessidadeCaixaFinanc.push(dreNecessidadeCaixaFinanc);
+    dre.resultadoFinalCaixa.push(dreResultadoFinal);
   }
 
   const unleveredFCF = [];
@@ -443,9 +590,40 @@ function runModel(p){
     return { tir:tira, vpl, moic, payback, paybackD, investido, recebido, valorTerminal: mult*ebitdaAno5, cumSeries: (function(){const arr=[];let s=0;for(let t=1;t<cf.length;t++){s+=cf[t]; arr.push(s);} return arr;})() };
   }
 
+  // DRE_Geral_Anual: each year sums the 12 corresponding months; margin lines
+  // are recomputed from the summed numerator/denominator, not averaged.
+  function sumYears(arr){
+    const out=[];
+    for(let y=0;y<5;y++){ let s=0; for(let k=0;k<12;k++) s+=arr[y*12+k]; out.push(s); }
+    return out;
+  }
+  const dreAnualReceitaBruta = sumYears(dre.receitaBruta);
+  const dreAnualEbitda = sumYears(dre.ebitda);
+  const dreAnualLucroLiq = sumYears(dre.lucroLiquidoContabil);
+  const dreAnual = {
+    receitaBrutaMK4U: sumYears(dre.receitaBrutaMK4U),
+    receitaBruta: dreAnualReceitaBruta,
+    impostos: sumYears(dre.impostos),
+    comissoesFees: sumYears(dre.comissoesFees),
+    receitaLiquida: sumYears(dre.receitaLiquida),
+    cmv: sumYears(dre.cmv),
+    lucroBruto: sumYears(dre.lucroBruto),
+    opex: sumYears(dre.opex),
+    proLabore: sumYears(dre.proLabore),
+    ebitda: dreAnualEbitda,
+    margemEbitda: dreAnualEbitda.map((v,i)=> dreAnualReceitaBruta[i]!==0 ? v/dreAnualReceitaBruta[i] : 0),
+    depreciacao: sumYears(dre.depreciacao),
+    lair: sumYears(dre.lair),
+    irCsll: sumYears(dre.irCsll),
+    lucroLiquidoContabil: dreAnualLucroLiq,
+    necessidadeCaixaFinanc: sumYears(dre.necessidadeCaixaFinanc),
+    resultadoFinalCaixa: sumYears(dre.resultadoFinalCaixa),
+  };
+
   return {
     ebitdaAno5, ebitdaAtual: ebitdaAtual.slice(1), ebitdaMK4U: ebitdaMK4U.slice(1), ebitdaGlobal: ebitdaGlobal.slice(1),
-    cons: scenario(C.MultConserv), base: scenario(C.MultBase), otim: scenario(C.MultOtim)
+    cons: scenario(C.MultConserv), base: scenario(C.MultBase), otim: scenario(C.MultOtim),
+    om, oc, dre, dreAnual,
   };
 }
 
@@ -678,6 +856,154 @@ function drawStackedBarChart(svg, seriesA, seriesB, opts){
   });
 }
 
+/* ============================= TABS ============================= */
+document.getElementById('tabbar').addEventListener('click', e=>{
+  const btn = e.target.closest('.tab-btn');
+  if(!btn) return;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b===btn));
+  const key = btn.dataset.tab;
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active', p.id==='tab-'+key));
+});
+
+/* ============================= SHEET TABLE RENDERING ============================= */
+const fmtInt = n => Math.round(n).toLocaleString('pt-BR');
+const monthsHeader = Array.from({length:60}, (_,i)=>'M'+(i+1));
+const yearsHeader = ['Ano 1','Ano 2','Ano 3','Ano 4','Ano 5'];
+
+function renderSheetTable(tableEl, rows, headerCols, headerLabel){
+  const thead = `<thead><tr><th class="rowlabel">${headerLabel}</th>${headerCols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>`;
+  const tbody = '<tbody>' + rows.map(row=>{
+    if(row.type==='section'){
+      return `<tr class="section-row"><td colspan="${headerCols.length+1}">${row.label}</td></tr>`;
+    }
+    const cells = row.data.map(v=>{
+      let text;
+      if(row.fmt==='pct') text = fmtPct(v);
+      else if(row.fmt==='int') text = fmtInt(v);
+      else text = fmtBRL(v);
+      const cls = row.fmt!=='int' && row.fmt!=='pct' ? (v<0?'neg':(v>0?'pos':'')) : '';
+      return `<td class="${cls}">${text}</td>`;
+    }).join('');
+    const rowCls = row.type==='total' ? 'total-row' : '';
+    return `<tr class="${rowCls}"><td class="rowlabel">${row.label}</td>${cells}</tr>`;
+  }).join('') + '</tbody>';
+  tableEl.innerHTML = thead + tbody;
+}
+
+function buildOpMK4URows(om){
+  return [
+    {type:'data', label:'Torres ativas (fim do mês)', data:om.torres, fmt:'int'},
+    {type:'data', label:'Máquinas ativas', data:om.maquinas, fmt:'int'},
+    {type:'data', label:'Condomínios ativos', data:om.condominios, fmt:'int'},
+    {type:'data', label:'Novas torres instaladas no mês', data:om.novasTorres, fmt:'int'},
+    {type:'section', label:'RECEITA'},
+    {type:'data', label:'Ciclos/mês', data:om.ciclos, fmt:'int'},
+    {type:'data', label:'Preço / Ciclo', data:om.precoCiclo},
+    {type:'data', label:'Receita Bruta', data:om.receitaBruta},
+    {type:'section', label:'IMPOSTOS E REPASSES S/ RECEITA'},
+    {type:'data', label:'Impostos s/ Receita', data:om.impostos},
+    {type:'data', label:'Comissão condomínio (Botão 4)', data:om.comissaoCond},
+    {type:'data', label:'Fee MK4U', data:om.feeMK4U},
+    {type:'total', label:'Receita Líquida', data:om.receitaLiquida},
+    {type:'section', label:'CMV (CUSTO VARIÁVEL) — água, luz e químico'},
+    {type:'data', label:'Químico', data:om.quimico},
+    {type:'data', label:'Água e Luz (Botão 1)', data:om.aguaLuz},
+    {type:'total', label:'CMV Total', data:om.cmvTotal},
+    {type:'total', label:'Lucro Bruto', data:om.lucroBruto},
+    {type:'data', label:'Margem de Contribuição', data:om.margemContrib, fmt:'pct'},
+    {type:'data', label:'OPEX incremental (informativo — contabilizado no Global)', data:om.opexIncremental},
+    {type:'data', label:'Comissão do parceiro MK4U (Botão 2)', data:om.comissaoParceiro},
+    {type:'total', label:'EBITDA', data:om.ebitda},
+    {type:'data', label:'Margem EBITDA', data:om.margemEbitda, fmt:'pct'},
+    {type:'data', label:'Depreciação', data:om.depreciacao},
+    {type:'data', label:'Lucro Antes dos Impostos', data:om.lucroAntesImpostos},
+    {type:'total', label:'Lucro Líquido', data:om.lucroLiquido},
+    {type:'section', label:'CAPEX (FLUXO DE INVESTIMENTOS)'},
+    {type:'data', label:'CAPEX Equipamento + Obra', data:om.capexEquipObra},
+    {type:'data', label:'Novos condomínios assinados no mês', data:om.novosCondos, fmt:'int'},
+    {type:'data', label:'Taxa de originação MK4U', data:om.taxaOrigem},
+    {type:'total', label:'TOTAL CAPEX', data:om.capexTotal},
+    {type:'section', label:'CONSÓRCIO — compra de torres (R$35k/torre)'},
+    {type:'data', label:'Carta de consórcio contratada', data:om.cartaConsorcio},
+    {type:'data', label:'Lance de contemplação', data:om.lance},
+    {type:'data', label:'Saldo financiado pelo consórcio', data:om.saldoFinanciado},
+    {type:'data', label:'PMT da carta contratada no mês', data:om.pmtCarta},
+    {type:'data', label:'PMT total do consórcio ativo', data:om.pmtTotal},
+    {type:'data', label:'Saldo devedor do lance (acumulado)', data:om.saldoLance},
+    {type:'data', label:'Juros mensais do empréstimo do lance', data:om.jurosLance},
+    {type:'total', label:'Necessidade de caixa do financiamento', data:om.necessidadeCaixa},
+    {type:'data', label:'CAPEX à vista − necessidade financiada', data:om.comparacaoCapex},
+    {type:'total', label:'RESULTADO LÍQUIDO OPERACIONAL', data:om.resultLiqOperacional},
+    {type:'section', label:'RAMP-UP DE ADESÃO (60% no mês → 100% em 4 meses)'},
+    {type:'data', label:'Déficit de adesão (torres)', data:om.deficitAdesao},
+    {type:'data', label:'Torres Equivalentes', data:om.torresEquiv},
+    {type:'data', label:'% de Adesão Efetiva', data:om.pctAdesao, fmt:'pct'},
+  ];
+}
+
+function buildOpConsRows(oc){
+  return [
+    {type:'section', label:'MÁQUINAS E TORRES'},
+    {type:'data', label:'Máquinas — Estratégia Atual', data:oc.maquinasAtual, fmt:'int'},
+    {type:'data', label:'Máquinas — Estratégia MK4U', data:oc.maquinasMK4U, fmt:'int'},
+    {type:'total', label:'Máquinas — TOTAL GLOBAL', data:oc.maquinasTotal, fmt:'int'},
+    {type:'data', label:'Torres ativas — Estratégia MK4U', data:oc.torresMK4U, fmt:'int'},
+    {type:'section', label:'RECEITA'},
+    {type:'data', label:'Receita Bruta — Estratégia Atual', data:oc.receitaAtual},
+    {type:'data', label:'Receita Bruta — Estratégia MK4U', data:oc.receitaMK4U},
+    {type:'total', label:'Receita Bruta — GLOBAL', data:oc.receitaGlobal},
+    {type:'section', label:'IMPOSTOS, ROYALTIES E FEE MK4U'},
+    {type:'data', label:'Impostos s/ receita — Estratégia Atual', data:oc.impostosAtual},
+    {type:'data', label:'Impostos s/ receita (9,25%) — Estratégia MK4U', data:oc.impostosMK4U},
+    {type:'data', label:'Royalties (2,7%, contratual) — Estratégia Atual', data:oc.royaltiesAtual},
+    {type:'data', label:'Comissão condomínio (Botão 4) — Estratégia MK4U', data:oc.comissaoCond},
+    {type:'data', label:'Fee MK4U (5%) — Estratégia MK4U', data:oc.feeMK4U},
+    {type:'total', label:'TOTAL Impostos + Royalties + Fee — GLOBAL', data:oc.totalImpostosGlobal},
+    {type:'section', label:'CUSTOS OPERACIONAIS (CMV + OPEX/RH)'},
+    {type:'data', label:'CMV total — Estratégia Atual', data:oc.cmvAtual},
+    {type:'data', label:'Custo variável (água+luz+químico) — Estratégia MK4U', data:oc.cmvMK4U},
+    {type:'data', label:'OPEX total — Estratégia Atual (78 máquinas fixas)', data:oc.opexAtual},
+    {type:'data', label:'OPEX incremental por bloco de 150 máq. (corporativo)', data:oc.opexIncremental},
+    {type:'data', label:'Pró-labore da diretoria (corporativo)', data:oc.proLabore},
+    {type:'total', label:'TOTAL Custos Operacionais — GLOBAL', data:oc.totalCustosGlobal},
+    {type:'section', label:'EBITDA'},
+    {type:'data', label:'EBITDA — Estratégia Atual', data:oc.ebitdaAtual},
+    {type:'data', label:'EBITDA — Estratégia MK4U', data:oc.ebitdaMK4U},
+    {type:'total', label:'EBITDA — GLOBAL', data:oc.ebitdaGlobal},
+    {type:'data', label:'Margem EBITDA GLOBAL', data:oc.margemEbitdaGlobal, fmt:'pct'},
+    {type:'section', label:'CAPEX E FINANCIAMENTO (ESTRATÉGIA MK4U)'},
+    {type:'data', label:'CAPEX total do mês — Estratégia MK4U', data:oc.capexMK4U},
+    {type:'data', label:'Necessidade de caixa do financiamento — MK4U', data:oc.necessidadeCaixaMK4U},
+    {type:'data', label:'Lucro Líquido pós-depreciação — MK4U', data:oc.lucroLiqMK4U},
+    {type:'data', label:'Resultado Líquido Operacional pós-financiamento — MK4U', data:oc.resultLiqOperMK4U},
+    {type:'section', label:'RESULTADO CONSOLIDADO'},
+    {type:'total', label:'RESULTADO LÍQUIDO OPERACIONAL — GLOBAL', data:oc.resultLiqOperGlobal},
+    {type:'total', label:'RESULTADO LÍQUIDO FINAL GLOBAL', data:oc.resultLiqFinalGlobal},
+  ];
+}
+
+function buildDreRows(dre){
+  return [
+    {type:'data', label:'dos quais, Receita Bruta — Estratégia MK4U', data:dre.receitaBrutaMK4U},
+    {type:'data', label:'Receita Bruta', data:dre.receitaBruta},
+    {type:'data', label:'(-) Impostos s/ Receita', data:dre.impostos},
+    {type:'data', label:'(-) Comissão Condomínio, Fee MK4U e Comissão do Parceiro', data:dre.comissoesFees},
+    {type:'total', label:'(=) Receita Líquida', data:dre.receitaLiquida},
+    {type:'data', label:'(-) CMV (custo dos serviços vendidos)', data:dre.cmv},
+    {type:'total', label:'(=) Lucro Bruto', data:dre.lucroBruto},
+    {type:'data', label:'(-) Despesas Operacionais (OPEX/RH, inclui bloco de 150 máq.)', data:dre.opex},
+    {type:'data', label:'(-) Pró-labore dos Sócios', data:dre.proLabore},
+    {type:'total', label:'(=) EBITDA', data:dre.ebitda},
+    {type:'data', label:'Margem EBITDA', data:dre.margemEbitda, fmt:'pct'},
+    {type:'data', label:'(-) Depreciação', data:dre.depreciacao},
+    {type:'total', label:'(=) Lucro Antes do IR/CSLL (LAIR)', data:dre.lair},
+    {type:'data', label:'(-) IR/CSLL', data:dre.irCsll},
+    {type:'total', label:'(=) Lucro Líquido Contábil', data:dre.lucroLiquidoContabil},
+    {type:'data', label:'(-) Necessidade de Caixa do Financiamento (consórcio, MK4U)', data:dre.necessidadeCaixaFinanc},
+    {type:'total', label:'(=) RESULTADO LÍQUIDO FINAL (CAIXA)', data:dre.resultadoFinalCaixa},
+  ];
+}
+
 function update(){
   const r = runModel(state);
   const base = r.base;
@@ -727,6 +1053,11 @@ function update(){
   if(legendEl){
     legendEl.innerHTML = `<span><i style="background:${accent2Color}"></i>Estratégia Atual</span><span><i style="background:${accentColor}"></i>Estratégia MK4U</span>`;
   }
+
+  renderSheetTable(document.getElementById('tbl-opmk4u'), buildOpMK4URows(r.om), monthsHeader, 'Operação MK4U');
+  renderSheetTable(document.getElementById('tbl-opcons'), buildOpConsRows(r.oc), monthsHeader, 'Operação Consolidada');
+  renderSheetTable(document.getElementById('tbl-dremensal'), buildDreRows(r.dre), monthsHeader, 'DRE Mensal');
+  renderSheetTable(document.getElementById('tbl-dreanual'), buildDreRows(r.dreAnual), yearsHeader, 'DRE Anual');
 }
 
 syncControlsFromState();
