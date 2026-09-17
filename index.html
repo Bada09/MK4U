@@ -245,7 +245,6 @@ table.sheet td{ color:var(--text); }
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
 
-
 </head>
 <body>
 <div class="wrap">
@@ -267,6 +266,7 @@ table.sheet td{ color:var(--text); }
     <button class="tab-btn" data-tab="dremensal">DRE Mensal</button>
     <button class="tab-btn" data-tab="dreanual">DRE Anual</button>
     <button class="tab-btn" data-tab="comentarios">Comentários</button>
+    <button class="tab-btn" data-tab="captable">Cap Table</button>
   </nav>
 
   <!-- TAB: VALUATION -->
@@ -280,27 +280,55 @@ table.sheet td{ color:var(--text); }
       <div class="reset-row"><button class="reset" id="resetBtn">Restaurar padrão da planilha</button></div>
     </section>
 
-    <!-- KPIs -->
-    <div class="section-title"><h2>Retorno do investidor</h2><span class="n">Cenário Base</span></div>
-    <div class="grid kpi-grid" id="kpis"></div>
+    <!-- INVESTOR PROFILE -->
+    <section class="panel">
+      <h2>Perfil do investidor</h2>
+      <div class="sub">Como o investidor participa do negócio — vira sócio (equity) ou empresta para financiar a torre (dívida via SPE).</div>
+      <nav class="tabbar" id="profileBar" style="margin-top:14px;">
+        <button class="tab-btn active" data-profile="equity">Equity (sócio)</button>
+        <button class="tab-btn" data-profile="divida">Dívida via SPE (20% a.a.)</button>
+      </nav>
+    </section>
 
-    <!-- Scenarios -->
-    <div class="section-title"><h2>Valor terminal na saída (mês 60)</h2><span class="n">3 cenários</span></div>
-    <div class="grid scenario-grid" id="scenarios"></div>
+    <!-- EQUITY VIEW -->
+    <div id="equityView">
+      <div class="section-title"><h2>Retorno do investidor</h2><span class="n">Cenário Base</span></div>
+      <div class="grid kpi-grid" id="kpis"></div>
 
-    <!-- Charts -->
-    <div class="section-title"><h2>Evolução dos 60 meses</h2></div>
-    <div class="grid two-col">
-      <div class="panel chart-card">
-        <h2>Fluxo de caixa acumulado do investidor</h2>
-        <div class="sub">Projeto não alavancado, cenário Base — o mês em que a curva cruza zero é o payback simples.</div>
-        <div class="chart-svg-wrap"><svg id="cashChart" viewBox="0 0 600 260" preserveAspectRatio="xMidYMid meet"></svg></div>
+      <div class="section-title"><h2>Valor terminal na saída (mês 60)</h2><span class="n">3 cenários</span></div>
+      <div class="grid scenario-grid" id="scenarios"></div>
+
+      <div class="section-title"><h2>Fluxo de caixa acumulado do investidor</h2></div>
+      <div class="grid two-col">
+        <div class="panel chart-card">
+          <div class="sub">Projeto não alavancado, cenário Base — o mês em que a curva cruza zero é o payback simples.</div>
+          <div class="chart-svg-wrap"><svg id="cashChart" viewBox="0 0 600 260" preserveAspectRatio="xMidYMid meet"></svg></div>
+        </div>
+        <div class="panel chart-card">
+          <div class="sub">EBITDA Global mensal — decomposto entre Operação Padrão (estável) e Parceria MK4U (cresce com as torres).</div>
+          <div class="chart-svg-wrap"><svg id="ebitdaChart" viewBox="0 0 600 260" preserveAspectRatio="xMidYMid meet"></svg></div>
+          <div class="chart-legend" id="ebitdaLegend"></div>
+        </div>
       </div>
-      <div class="panel chart-card">
-        <h2>EBITDA Global mensal</h2>
-        <div class="sub">Decomposto entre Operação Padrão (estável) e Parceria MK4U (cresce com as torres).</div>
-        <div class="chart-svg-wrap"><svg id="ebitdaChart" viewBox="0 0 600 260" preserveAspectRatio="xMidYMid meet"></svg></div>
-        <div class="chart-legend" id="ebitdaLegend"></div>
+    </div>
+
+    <!-- DÍVIDA VIA SPE VIEW -->
+    <div id="dividaView" style="display:none;">
+      <div class="section-title"><h2>Retorno do investidor-credor</h2><span class="n">Dívida via SPE</span></div>
+      <div class="grid kpi-grid" id="kpisDivida"></div>
+      <div class="panel" style="margin-top:16px;">
+        <div class="sub">O investidor não vira sócio: ele financia o mesmo CAPEX Total (equipamento + obra + taxa de origem) que o investidor-sócio aportaria, mas como empréstimo bullet à SPE a 20% a.a., prazo de 48 meses. Ele desembolsa o capex mês a mês, no mesmo ritmo em que as torres entram, recebe só os juros mensalmente e o principal de cada tranche integralmente de volta no mês em que ela completa 48 meses (tranches que ainda não venceram no Mês 60 têm o principal em aberto reconhecido como recebimento no próprio Mês 60). Sem participar do EBITDA nem do valor terminal de saída. Como ele banca o capex diretamente, não há uma "PMT do investidor" separada pesando na operação — a PMT do consórcio e o empréstimo do lance mostrados na aba de Operação continuam sendo apenas o financiamento externo da própria empresa (a "carta" do consórcio), independente de quem bancou o capex.</div>
+      </div>
+      <div class="section-title"><h2>Fluxo de caixa acumulado do investidor-credor</h2></div>
+      <div class="grid two-col">
+        <div class="panel chart-card">
+          <div class="chart-svg-wrap"><svg id="cashChartDivida" viewBox="0 0 600 260" preserveAspectRatio="xMidYMid meet"></svg></div>
+        </div>
+        <div class="panel chart-card">
+          <div class="sub">EBITDA Global mensal — decomposto entre Operação Padrão (estável) e Parceria MK4U (cresce com as torres).</div>
+          <div class="chart-svg-wrap"><svg id="ebitdaChartDivida" viewBox="0 0 600 260" preserveAspectRatio="xMidYMid meet"></svg></div>
+          <div class="chart-legend" id="ebitdaLegendDivida"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -351,8 +379,51 @@ table.sheet td{ color:var(--text); }
     <div class="grid insight-grid" id="highlightsGrid" style="margin-top:16px;"></div>
   </div>
 
+  <!-- TAB: CAP TABLE -->
+  <div class="tab-panel" id="tab-captable">
+    <div class="section-title"><h2>Quadro Societário — Histórico</h2><span class="n">2020 a 2025</span></div>
+    <div class="panel">
+      <div class="sub">Quotas e participação de cada sócio ao longo dos aportes e diluições anteriores.</div>
+      <div class="table-scroll"><table class="sheet" id="tbl-captable-hist"></table></div>
+    </div>
+
+    <div class="section-title"><h2>Simulador de Diluição</h2><span class="n">novo aporte</span></div>
+    <div class="panel">
+      <div class="sub">Parte da base societária de 2025 (mais recente). Escolha como definir a fatia do novo investidor e veja a diluição de cada sócio.</div>
+      <div class="toggle-row" style="margin-bottom:14px;">
+        <span class="switch-label" data-role="offlabel" id="capModeOffLabel">R$ (aporte + valuation)</span>
+        <button class="switch" id="capModeSwitch" role="switch" aria-checked="false"></button>
+        <span class="switch-label" data-role="onlabel" id="capModeOnLabel">% direto</span>
+      </div>
+      <div class="controls-grid" id="capInputsValue">
+        <div class="num-field">
+          <label for="in-preMoney">Valuation pré-money (R$)</label>
+          <input id="in-preMoney" type="number" step="10000">
+        </div>
+        <div class="num-field">
+          <label for="in-aporte">Aporte do investidor (R$)</label>
+          <input id="in-aporte" type="number" step="10000">
+        </div>
+      </div>
+      <div class="controls-grid" id="capInputsPct" style="display:none;">
+        <div class="num-field">
+          <label for="in-pctDireto">% de equity a oferecer ao investidor</label>
+          <input id="in-pctDireto" type="number" step="0.5">
+        </div>
+      </div>
+      <div style="margin-top:6px;">
+        <button class="reset" id="useVplBtn" type="button">Usar VPL do cenário Base como valuation pré-money</button>
+      </div>
+      <div class="grid kpi-grid" id="kpisCapTable" style="margin-top:16px;"></div>
+    </div>
+    <div class="panel">
+      <div class="sub">Participação de cada sócio antes e depois da rodada (base: quadro de 2025).</div>
+      <div class="table-scroll"><table class="sheet" id="tbl-captable-diluicao"></table></div>
+    </div>
+  </div>
+
   <footer class="note">
-    <strong>Metodologia:</strong> replica as fórmulas da planilha <span class="mono">LAVAI_MK4U_UnitEconomics_Global_5anos.xlsx</span> (abas Premissas, Operação_Estrategia_MK4U, PL_Global_Consolidado_60m, Operação_Consolidada, DRE_Geral_Mensal, DRE_Geral_Anual e Valuation_Investidores) — validado célula a célula contra o recálculo da planilha para múltiplas combinações de botões. Fluxo de caixa do investidor = EBITDA Global − CAPEX de torres (projeto não alavancado, como no cenário "C" da aba Valuation). O Valor Terminal por múltiplo EV/EBITDA é Enterprise Value (dívida + equity); para chegar no Equity Value que o investidor recebe, subtraímos a dívida líquida remanescente no Mês 60 — saldo do consórcio ainda em amortização (Price, 48 meses) mais o saldo do empréstimo do lance (bullet, nunca amortizado neste modelo) — antes de somar ao fluxo de caixa. Payback simples conta meses de fluxo acumulado negativo; TIR e VPL usam a taxa de desconto mensal equivalente ao WACC de 20% a.a. da aba Valuation. Premissas fixas nesta ferramenta (não controladas pelos botões): cronograma de instalação de torres, impostos (PIS+COFINS 9,25%), inflação anual (10% receita / 5% custos), depreciação em 120 meses e financiamento via consórcio. Ferramenta de apoio — a planilha permanece a fonte oficial.
+    <strong>Metodologia:</strong> replica as fórmulas da planilha <span class="mono">LAVAI_MK4U_UnitEconomics_Global_5anos.xlsx</span> (abas Premissas, Operação_Estrategia_MK4U, PL_Global_Consolidado_60m, Operação_Consolidada, DRE_Geral_Mensal, DRE_Geral_Anual e Valuation_Investidores) — validado célula a célula contra o recálculo da planilha para múltiplas combinações de botões. Fluxo de caixa do investidor = EBITDA Global − CAPEX de torres (projeto não alavancado, como no cenário "C" da aba Valuation). O Valor Terminal por múltiplo EV/EBITDA é Enterprise Value (dívida + equity); para chegar no Equity Value que o investidor recebe, subtraímos a dívida líquida remanescente no Mês 60 — saldo do consórcio ainda em amortização (Price, 48 meses) mais o saldo do empréstimo do lance (bullet, 48 meses — tranches ainda não vencidas contam pelo principal integral) — antes de somar ao fluxo de caixa. Payback simples conta meses de fluxo acumulado negativo; TIR e VPL usam a taxa de desconto mensal equivalente ao WACC de 20% a.a. da aba Valuation. Premissas fixas nesta ferramenta (não controladas pelos botões): cronograma de instalação de torres, impostos (PIS+COFINS 9,25%), inflação anual (10% receita / 5% custos), depreciação em 120 meses e financiamento via consórcio. Ferramenta de apoio — a planilha permanece a fonte oficial.
   </footer>
 </div>
 
@@ -381,6 +452,7 @@ C.CiclosTorreMes = C.CiclosDiaMaquina*C.MaquinasPorTorre*30;
 C.CapexTorreTotal = C.CapexTorreEquip + C.CapexCondoObra/C.TorresPorCondo;
 C.TaxaConsorcioAM = Math.pow(1+C.TaxaConsorcioAA, 1/12)-1;
 C.TaxaEmprestimoLanceAM = Math.pow(1+C.TaxaEmprestimoLanceAA, 1/12)-1;
+C.PrazoLanceMeses = 48;
 C.WACC_AM = Math.pow(1+C.WACC_AA, 1/12)-1;
 
 // Torres ativas (fim do mês) - input schedule from the workbook, months 1..60
@@ -453,7 +525,7 @@ function runModel(p){
   const resultLiqOperGlobal = new Array(N+1).fill(0);
   const capexTotalArr = new Array(N+1).fill(0);
   const pmtCarta = new Array(N+1).fill(0);
-  const saldoLance = new Array(N+1).fill(0);
+  const lanceHist = new Array(N+1).fill(0);
 
   // Detailed monthly line items, mirroring the Excel tabs Operação_Estrategia_MK4U,
   // Operação_Consolidada and DRE_Geral_Mensal — one push per month, in order.
@@ -461,7 +533,7 @@ function runModel(p){
     impostos:[],comissaoCond:[],feeMK4U:[],receitaLiquida:[],quimico:[],aguaLuz:[],cmvTotal:[],lucroBruto:[],
     margemContrib:[],opexIncremental:[],comissaoParceiro:[],ebitda:[],margemEbitda:[],depreciacao:[],
     lucroAntesImpostos:[],lucroLiquido:[],capexEquipObra:[],novosCondos:[],taxaOrigem:[],capexTotal:[],
-    cartaConsorcio:[],lance:[],saldoFinanciado:[],pmtCarta:[],pmtTotal:[],saldoLance:[],jurosLance:[],
+    cartaConsorcio:[],lance:[],saldoFinanciado:[],pmtCarta:[],pmtTotal:[],jurosLance:[],principalLance:[],saldoLance:[],
     necessidadeCaixa:[],comparacaoCapex:[],resultLiqOperacional:[],deficitAdesao:[],torresEquiv:[],pctAdesao:[]};
   const oc = {maquinasAtual:[],maquinasMK4U:[],maquinasTotal:[],torresMK4U:[],receitaAtual:[],receitaMK4U:[],
     receitaGlobal:[],impostosAtual:[],impostosMK4U:[],royaltiesAtual:[],comissaoCond:[],feeMK4U:[],
@@ -514,9 +586,23 @@ function runModel(p){
     pmtCarta[m] = saldoFinanciado>0 ? saldoFinanciado*C.TaxaConsorcioAM/(1-Math.pow(1+C.TaxaConsorcioAM,-C.PrazoConsorcioMeses)) : 0;
     let pmtTotal=0;
     for(let i=Math.max(1,m-C.PrazoConsorcioMeses+1); i<=m; i++) pmtTotal+=pmtCarta[i];
-    saldoLance[m] = saldoLance[m-1]+lance;
-    const jurosLance = saldoLance[m-1]*C.TaxaEmprestimoLanceAM;
-    const necessidadeCaixa = pmtTotal+jurosLance;
+    // Empréstimo do lance: bullet de PrazoLanceMeses — cada tranche (32% da carta
+    // do mês) paga só juros mensais sobre o principal, e devolve o principal
+    // integral (bullet) no mês em que completa o prazo. Se o prazo estourar o
+    // horizonte de 60 meses, a tranche fica em aberto (entra na dívida líquida
+    // no Mês 60). Botão 6 (Premissas): se o lance for aportado por um
+    // investidor puro (equity), não há PMT/juros nem dívida remanescente —
+    // zera-se todo o serviço da dívida do lance.
+    lanceHist[m] = lance;
+    let jurosLance=0, principalLance=0, saldoLance=0;
+    for(let s=Math.max(1,m-C.PrazoLanceMeses+1); s<=m && !p.b6; s++){
+      if(lanceHist[s]>0){
+        jurosLance += lanceHist[s]*C.TaxaEmprestimoLanceAM;
+        if(s+C.PrazoLanceMeses-1===m) principalLance += lanceHist[s];
+        else saldoLance += lanceHist[s];
+      }
+    }
+    const necessidadeCaixa = pmtTotal+jurosLance+principalLance;
     const resultOperMK4U = lucroLiqMK4U-necessidadeCaixa;
 
     // Operação Padrão (fixa: 78 máquinas)
@@ -548,7 +634,7 @@ function runModel(p){
     om.capexEquipObra.push(capexEquipObra); om.novosCondos.push(novosCondos); om.taxaOrigem.push(taxaOrig);
     om.capexTotal.push(capexTotalArr[m]); om.cartaConsorcio.push(cartaConsorcio); om.lance.push(lance);
     om.saldoFinanciado.push(saldoFinanciado); om.pmtCarta.push(pmtCarta[m]); om.pmtTotal.push(pmtTotal);
-    om.saldoLance.push(saldoLance[m]); om.jurosLance.push(jurosLance); om.necessidadeCaixa.push(necessidadeCaixa);
+    om.jurosLance.push(jurosLance); om.principalLance.push(principalLance); om.saldoLance.push(saldoLance); om.necessidadeCaixa.push(necessidadeCaixa);
     om.comparacaoCapex.push(capexEquipObra-necessidadeCaixa); om.resultLiqOperacional.push(resultOperMK4U);
     om.deficitAdesao.push(deficit(m)); om.torresEquiv.push(torresEquiv);
     om.pctAdesao.push(torres[m]!==0 ? torresEquiv/torres[m] : 0);
@@ -599,20 +685,31 @@ function runModel(p){
   // Dívida líquida remanescente no Mês 60 — o múltiplo EV/EBITDA dá o Enterprise
   // Value (dívida + equity). Para chegar no que o investidor efetivamente recebe
   // (Equity Value), subtraímos a dívida ainda em aberto na saída: o saldo do
-  // consórcio ainda em amortização (Price, 48 meses) de cada carta contratada ao
-  // longo dos 60 meses, mais o saldo do empréstimo do lance (bullet, nunca
-  // amortizado neste modelo — Operação_Estrategia_MK4U, linha 61).
-  let consorcioOutstandingM60 = 0;
-  for(let s=1; s<=N; s++){
-    const pmt = pmtCarta[s];
-    if(!pmt) continue;
-    const k = Math.min(N-s+1, C.PrazoConsorcioMeses);
-    const remainingN = C.PrazoConsorcioMeses - k;
-    if(remainingN<=0) continue;
-    const i = C.TaxaConsorcioAM;
-    consorcioOutstandingM60 += pmt*(1-Math.pow(1+i,-remainingN))/i;
+  // consórcio (amortização Price, 48 meses) e o saldo do empréstimo do lance
+  // (bullet, 48 meses — tranches ainda não vencidas no Mês 60 contam pelo
+  // principal integral, já que só pagam juros até o vencimento).
+  function outstandingBalancePrice(pmtArr, i, prazo){
+    let total=0;
+    for(let s=1; s<=N; s++){
+      const pmt = pmtArr[s];
+      if(!pmt) continue;
+      const k = Math.min(N-s+1, prazo);
+      const remainingN = prazo - k;
+      if(remainingN<=0) continue;
+      total += pmt*(1-Math.pow(1+i,-remainingN))/i;
+    }
+    return total;
   }
-  const dividaLiquidaM60 = consorcioOutstandingM60 + saldoLance[N];
+  function outstandingBalanceBullet(disbArr, prazo){
+    let total=0;
+    for(let s=1; s<=N; s++){
+      if(disbArr[s]>0 && s+prazo-1>N) total += disbArr[s];
+    }
+    return total;
+  }
+  const consorcioOutstandingM60 = outstandingBalancePrice(pmtCarta, C.TaxaConsorcioAM, C.PrazoConsorcioMeses);
+  const lanceOutstandingM60 = p.b6 ? 0 : outstandingBalanceBullet(lanceHist, C.PrazoLanceMeses);
+  const dividaLiquidaM60 = consorcioOutstandingM60 + lanceOutstandingM60;
 
   function scenario(mult){
     const cf=[0].concat(unleveredFCF);
@@ -632,6 +729,51 @@ function runModel(p){
     for(let t=1;t<cf.length;t++){ cumD+= cf[t]/Math.pow(1+C.WACC_AM,t); if(cumD<0) paybackD++; }
     return { tir:tira, vpl, moic, payback, paybackD, investido, recebido,
       valorTerminal: valorTerminalEquity, valorTerminalEV, dividaLiquidaM60,
+      cumSeries: (function(){const arr=[];let s=0;for(let t=1;t<cf.length;t++){s+=cf[t]; arr.push(s);} return arr;})() };
+  }
+
+  // Cenário alternativo: investidor-credor via SPE. Em vez de virar sócio, ele
+  // financia o mesmo CAPEX Total (equipamento + obra + taxa de origem) que o
+  // investidor-sócio aportaria — não apenas a tranche do lance — só que como
+  // empréstimo bullet à SPE a 20% a.a., prazo de PrazoLanceMeses (48 meses):
+  // paga só juros mês a mês sobre cada tranche desembolsada e devolve o
+  // principal integral no mês em que ela completa o prazo. Ele desembolsa o
+  // capex mês a mês, no mesmo ritmo em que as torres entram. Tranches que
+  // ainda não venceram no Mês 60 têm seu principal em aberto reconhecido como
+  // recebimento no próprio Mês 60 (valor de saída da posição). Sem
+  // participação societária: não há valor terminal nem múltiplo de saída — o
+  // retorno é o fluxo de caixa da dívida em si.
+  function dividaViaSPE(){
+    const prazo = C.PrazoLanceMeses;
+    const taxa = C.TaxaEmprestimoLanceAM;
+    const cf = [0];
+    let recebido = 0;
+    for(let m=1;m<=N;m++){
+      let jurosTot=0, principalTot=0;
+      for(let s=Math.max(1,m-prazo+1); s<=m; s++){
+        if(capexTotalArr[s]>0){
+          jurosTot += capexTotalArr[s]*taxa;
+          if(s+prazo-1===m) principalTot += capexTotalArr[s];
+        }
+      }
+      recebido += jurosTot+principalTot;
+      cf.push(jurosTot+principalTot - capexTotalArr[m]);
+    }
+    let saldoAbertoM60 = 0;
+    for(let s=1;s<=N;s++){
+      if(capexTotalArr[s]>0 && s+prazo-1>N) saldoAbertoM60 += capexTotalArr[s];
+    }
+    cf[cf.length-1] += saldoAbertoM60;
+    recebido += saldoAbertoM60;
+
+    const tirm = irrMonthly(cf);
+    const tira = Math.pow(1+tirm,12)-1;
+    const vpl = npvCalc(C.WACC_AM, cf.slice(1))+cf[0];
+    const investido = capexTotalArr.slice(1).reduce((a,b)=>a+b,0);
+    const moic = recebido/investido;
+    let cum=0, payback=0;
+    for(let t=1;t<cf.length;t++){ cum+=cf[t]; if(cum<0) payback++; }
+    return { tir:tira, vpl, moic, payback, investido, recebido,
       cumSeries: (function(){const arr=[];let s=0;for(let t=1;t<cf.length;t++){s+=cf[t]; arr.push(s);} return arr;})() };
   }
 
@@ -668,6 +810,7 @@ function runModel(p){
   return {
     ebitdaAno5, ebitdaAtual: ebitdaAtual.slice(1), ebitdaMK4U: ebitdaMK4U.slice(1), ebitdaGlobal: ebitdaGlobal.slice(1),
     cons: scenario(C.MultConserv), base: scenario(C.MultBase), otim: scenario(C.MultOtim),
+    divida: dividaViaSPE(),
     om, oc, dre, dreAnual,
   };
 }
@@ -675,7 +818,7 @@ function runModel(p){
 /* ============================= UI STATE ============================= */
 const DEFAULTS = {
   b1:false, b2:true, comissaoParceiroPct:0.05, b3:false, precoTeste:15,
-  b4:true, comissaoCondPct:0.10, b5:false, ciclosTeste:4
+  b4:true, comissaoCondPct:0.10, b5:false, ciclosTeste:4, b6:false
 };
 let state = Object.assign({}, DEFAULTS);
 
@@ -706,13 +849,17 @@ const controlsSpec = [
     key:'b5', title:'Botão 5 — Ciclos por máquina/dia', numKey:'ciclosTeste', numLabel:'Ciclos/dia/máquina de teste', numStep:0.1, numMult:1, numSuffix:'',
     desc:'Testa um número de ciclos por máquina por dia diferente do padrão (3,5).',
   },
+  {
+    key:'b6', title:'Botão 6 — Financiamento do Lance (32% da carta)', onLabel:'Investidor Puro', offLabel:'Bullet 20% a.a.',
+    desc:'NÃO (Bullet) = o lance é financiado por empréstimo bullet a 20% a.a. (juros mensais + principal no vencimento, 48 meses) — pesa na necessidade de caixa da operação e vira dívida líquida remanescente no Mês 60. SIM (Investidor Puro) = o lance é aportado por um investidor como capital direto (equity) — sem PMT, sem juros, sem dívida remanescente na saída.',
+  },
 ];
 
 const controlsEl = document.getElementById('controls');
 controlsSpec.forEach(spec=>{
   const card = document.createElement('div');
   card.className='control-card';
-  const onLabel = 'SIM', offLabel='NÃO';
+  const onLabel = spec.onLabel || 'SIM', offLabel = spec.offLabel || 'NÃO';
   card.innerHTML = `
     <div>
       <div class="ctitle">${spec.title}</div>
@@ -905,9 +1052,19 @@ function drawStackedBarChart(svg, seriesA, seriesB, opts){
 document.getElementById('tabbar').addEventListener('click', e=>{
   const btn = e.target.closest('.tab-btn');
   if(!btn) return;
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b===btn));
+  document.querySelectorAll('#tabbar .tab-btn').forEach(b=>b.classList.toggle('active', b===btn));
   const key = btn.dataset.tab;
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active', p.id==='tab-'+key));
+});
+
+/* ============================= INVESTOR PROFILE (equity vs. dívida via SPE) ============================= */
+document.getElementById('profileBar').addEventListener('click', e=>{
+  const btn = e.target.closest('.tab-btn');
+  if(!btn) return;
+  document.querySelectorAll('#profileBar .tab-btn').forEach(b=>b.classList.toggle('active', b===btn));
+  const profile = btn.dataset.profile;
+  document.getElementById('equityView').style.display = profile==='equity' ? '' : 'none';
+  document.getElementById('dividaView').style.display = profile==='divida' ? '' : 'none';
 });
 
 /* ============================= SHEET TABLE RENDERING ============================= */
@@ -973,8 +1130,9 @@ function buildOpMK4URows(om){
     {type:'data', label:'Saldo financiado pelo consórcio', data:om.saldoFinanciado},
     {type:'data', label:'PMT da carta contratada no mês', data:om.pmtCarta},
     {type:'data', label:'PMT total do consórcio ativo', data:om.pmtTotal},
-    {type:'data', label:'Saldo devedor do lance (acumulado)', data:om.saldoLance},
-    {type:'data', label:'Juros mensais do empréstimo do lance', data:om.jurosLance},
+    {type:'data', label:'Juros mensais do empréstimo do lance (bullet, 48 meses)', data:om.jurosLance},
+    {type:'data', label:'Amortização (principal) do lance no mês — bullet no vencimento', data:om.principalLance},
+    {type:'data', label:'Saldo devedor do lance (tranches ainda não vencidas)', data:om.saldoLance},
     {type:'total', label:'Necessidade de caixa do financiamento', data:om.necessidadeCaixa},
     {type:'data', label:'CAPEX à vista − necessidade financiada', data:om.comparacaoCapex},
     {type:'total', label:'RESULTADO LÍQUIDO OPERACIONAL', data:om.resultLiqOperacional},
@@ -1172,14 +1330,39 @@ function update(){
     currency:true,
   });
 
-  drawStackedBarChart(document.getElementById('ebitdaChart'), r.ebitdaAtual, r.ebitdaMK4U, {
-    grid:gridColor, text:textColor, color:accentColor, color2:accent2Color,
-  });
-
-  const legendEl = document.getElementById('ebitdaLegend');
-  if(legendEl){
-    legendEl.innerHTML = `<span><i style="background:${accent2Color}"></i>Operação Padrão</span><span><i style="background:${accentColor}"></i>Parceria MK4U</span>`;
+  const divida = r.divida;
+  const kpisDividaEl = document.getElementById('kpisDivida');
+  if(kpisDividaEl){
+    kpisDividaEl.innerHTML = [
+      kpiTile('TIR anualizada', fmtPct(divida.tir), divida.tir>=0?'pos':'neg', 'Taxa contratada do empréstimo: 20% a.a.'),
+      kpiTile('VPL (WACC 20% a.a.)', fmtBRL(divida.vpl), divida.vpl>=0?'pos':'neg', 'Perto de zero por construção — o empréstimo já é precificado à própria taxa de desconto'),
+      kpiTile('Payback simples', divida.payback+' meses', '', '≈ '+(divida.payback/12).toFixed(1)+' anos'),
+      kpiTile('MOIC', fmtX(divida.moic), 'pos', 'Múltiplo sobre o capital emprestado'),
+      kpiTile('Total emprestado', fmtBRL(divida.investido), '', 'Soma do CAPEX Total desembolsado ao longo dos 60 meses'),
+      kpiTile('Total recebido (juros + principal)', fmtBRL(divida.recebido), '', 'Juros mensais + principal bullet (incl. saldo em aberto reconhecido no Mês 60)'),
+    ].join('');
   }
+  const cashChartDividaEl = document.getElementById('cashChartDivida');
+  if(cashChartDividaEl){
+    drawLineChart(cashChartDividaEl, divida.cumSeries, {
+      grid:gridColor, text:textColor, color:accent2Color, accent2:accentColor,
+      markerIndex: (divida.payback!=null && divida.payback>0 && divida.payback<=60) ? divida.payback-1 : null,
+      currency:true,
+    });
+  }
+
+  const ebitdaLegendHTML = `<span><i style="background:${accent2Color}"></i>Operação Padrão</span><span><i style="background:${accentColor}"></i>Parceria MK4U</span>`;
+
+  ['ebitdaChart','ebitdaChartDivida'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) drawStackedBarChart(el, r.ebitdaAtual, r.ebitdaMK4U, {
+      grid:gridColor, text:textColor, color:accentColor, color2:accent2Color,
+    });
+  });
+  ['ebitdaLegend','ebitdaLegendDivida'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = ebitdaLegendHTML;
+  });
 
   renderSheetTable(document.getElementById('tbl-opmk4u'), buildOpMK4URows(r.om), monthsHeader, 'Operação MK4U');
   renderSheetTable(document.getElementById('tbl-opcons'), buildOpConsRows(r.oc), monthsHeader, 'Operação Consolidada');
@@ -1191,6 +1374,146 @@ function update(){
 
 syncControlsFromState();
 update();
+
+/* ============================= CAP TABLE ============================= */
+// Quadro societário histórico — quotas por sócio, 2020 a 2025 (dado fixo,
+// não depende dos botões de premissas). 2025 é a base usada no simulador
+// de diluição abaixo.
+const CAP_TABLE_HIST = [
+  {name:'Maria Dulce',    y2020:500, y2021:488, y2023:477, y2024:420, y2025:326},
+  {name:'Jeremy',         y2020:500, y2021:488, y2023:476, y2024:418, y2025:303},
+  {name:'Taba',           y2020:0,   y2021:0,   y2023:0,   y2024:100, y2025:303},
+  {name:'Andrew',         y2020:0,   y2021:24,  y2023:24,  y2024:24,  y2025:24},
+  {name:'Xavier',         y2020:0,   y2021:49,  y2023:60,  y2024:60,  y2025:60},
+  {name:'Bertrand',       y2020:0,   y2021:35,  y2023:35,  y2024:35,  y2025:35},
+  {name:'Philippe',       y2020:0,   y2021:24,  y2023:24,  y2024:24,  y2025:24},
+  {name:'Antonio',        y2020:0,   y2021:6,   y2023:6,   y2024:6,   y2025:6},
+  {name:'Lara',           y2020:0,   y2021:11,  y2023:11,  y2024:11,  y2025:11},
+  {name:'Olivier',        y2020:0,   y2021:6,   y2023:6,   y2024:6,   y2025:6},
+  {name:'Morgan',         y2020:0,   y2021:6,   y2023:6,   y2024:6,   y2025:6},
+  {name:'Nico',           y2020:0,   y2021:6,   y2023:6,   y2024:6,   y2025:6},
+  {name:'Mathieu',        y2020:0,   y2021:6,   y2023:6,   y2024:6,   y2025:6},
+  {name:'Eric',           y2020:0,   y2021:10,  y2023:10,  y2024:10,  y2025:10},
+  {name:'Arthur',         y2020:0,   y2021:5,   y2023:5,   y2024:5,   y2025:5},
+  {name:'Manu',           y2020:0,   y2021:12,  y2023:24,  y2024:24,  y2025:24},
+  {name:'Pierre',         y2020:0,   y2021:0,   y2023:0,   y2024:0,   y2025:6},
+  {name:'Régis TOK&STOK', y2020:0,   y2021:0,   y2023:0,   y2024:15,  y2025:15},
+];
+const CAP_TABLE_YEARS = ['y2020','y2021','y2023','y2024','y2025'];
+const CAP_TABLE_YEAR_LABELS = {y2020:'2020', y2021:'2021', y2023:'2023', y2024:'2024', y2025:'2025'};
+
+function renderCapTableHist(){
+  const totals = {};
+  CAP_TABLE_YEARS.forEach(y=>{ totals[y] = CAP_TABLE_HIST.reduce((a,r)=>a+r[y],0); });
+  let thead = '<thead><tr><th class="rowlabel">Sócio</th>';
+  CAP_TABLE_YEARS.forEach(y=>{ thead += `<th colspan="2">${CAP_TABLE_YEAR_LABELS[y]}</th>`; });
+  thead += '</tr></thead>';
+  let tbody = '<tbody>';
+  CAP_TABLE_HIST.forEach(row=>{
+    tbody += `<tr><td class="rowlabel">${row.name}</td>`;
+    CAP_TABLE_YEARS.forEach(y=>{
+      const pct = totals[y]>0 ? row[y]/totals[y] : 0;
+      tbody += `<td>${row[y]}</td><td>${fmtPct(pct)}</td>`;
+    });
+    tbody += '</tr>';
+  });
+  tbody += `<tr class="total-row"><td class="rowlabel">TOTAL</td>`;
+  CAP_TABLE_YEARS.forEach(y=>{ tbody += `<td>${totals[y]}</td><td>100,0%</td>`; });
+  tbody += '</tr></tbody>';
+  document.getElementById('tbl-captable-hist').innerHTML = thead+tbody;
+}
+renderCapTableHist();
+
+const capState = { mode:'value', preMoney:15000000, aporte:1000000, pctDireto:10 };
+
+function computeDiluicao(){
+  const base2025 = CAP_TABLE_HIST.map(r=>({name:r.name, quotas:r.y2025}));
+  const totalQuotas = base2025.reduce((a,r)=>a+r.quotas,0);
+
+  let novoInvestorPct, postMoney, aporteEfetivo, preMoneyEfetivo;
+  if(capState.mode==='value'){
+    preMoneyEfetivo = capState.preMoney;
+    aporteEfetivo = capState.aporte;
+    postMoney = preMoneyEfetivo+aporteEfetivo;
+    novoInvestorPct = postMoney>0 ? aporteEfetivo/postMoney : 0;
+  } else {
+    novoInvestorPct = capState.pctDireto/100;
+    // se o usuário também preencheu um valuation pré-money, usamos para
+    // estimar o aporte implícito; senão deixamos em branco (0).
+    preMoneyEfetivo = capState.preMoney;
+    postMoney = novoInvestorPct<1 ? preMoneyEfetivo/(1-novoInvestorPct) : 0;
+    aporteEfetivo = postMoney-preMoneyEfetivo;
+  }
+
+  const novasQuotasInvestor = novoInvestorPct<1 && novoInvestorPct>=0
+    ? totalQuotas*novoInvestorPct/(1-novoInvestorPct) : 0;
+  const totalQuotasPos = totalQuotas+novasQuotasInvestor;
+
+  const rows = base2025.map(r=>{
+    const pctAntes = totalQuotas>0 ? r.quotas/totalQuotas : 0;
+    const pctDepois = pctAntes*(1-novoInvestorPct);
+    return { name:r.name, quotas:r.quotas, pctAntes, quotasDepois:r.quotas, pctDepois };
+  });
+  rows.push({ name:'Novo Investidor', quotas:0, pctAntes:0, quotasDepois:novasQuotasInvestor, pctDepois:novoInvestorPct });
+
+  return { rows, totalQuotas, totalQuotasPos, novoInvestorPct, postMoney, aporteEfetivo, preMoneyEfetivo };
+}
+
+function renderDiluicao(){
+  const d = computeDiluicao();
+
+  const kpisCapEl = document.getElementById('kpisCapTable');
+  kpisCapEl.innerHTML = [
+    kpiTile('% oferecido ao investidor', fmtPct(d.novoInvestorPct), '', ''),
+    kpiTile('Valuation pré-money', fmtBRL(d.preMoneyEfetivo||0), '', ''),
+    kpiTile('Aporte do investidor', fmtBRL(d.aporteEfetivo||0), '', ''),
+    kpiTile('Valuation pós-money', fmtBRL(d.postMoney||0), '', ''),
+  ].join('');
+
+  let thead = '<thead><tr><th class="rowlabel">Sócio</th><th>Quotas (2025)</th><th>% antes</th><th>Quotas depois</th><th>% depois</th><th>Diluição (p.p.)</th></tr></thead>';
+  let tbody = '<tbody>';
+  d.rows.forEach(r=>{
+    const dilP = (r.pctAntes-r.pctDepois)*100;
+    const rowCls = r.name==='Novo Investidor' ? 'total-row' : '';
+    tbody += `<tr class="${rowCls}"><td class="rowlabel">${r.name}</td><td>${r.quotas.toLocaleString('pt-BR',{maximumFractionDigits:1})}</td><td>${fmtPct(r.pctAntes)}</td><td>${r.quotasDepois.toLocaleString('pt-BR',{maximumFractionDigits:1})}</td><td>${fmtPct(r.pctDepois)}</td><td>${r.name==='Novo Investidor' ? '—' : dilP.toFixed(2)+' p.p.'}</td></tr>`;
+  });
+  tbody += `<tr class="total-row"><td class="rowlabel">TOTAL</td><td>${d.totalQuotas.toLocaleString('pt-BR',{maximumFractionDigits:1})}</td><td>100,0%</td><td>${d.totalQuotasPos.toLocaleString('pt-BR',{maximumFractionDigits:1})}</td><td>100,0%</td><td></td></tr>`;
+  tbody += '</tbody>';
+  document.getElementById('tbl-captable-diluicao').innerHTML = thead+tbody;
+}
+
+const preMoneyInput = document.getElementById('in-preMoney');
+const aporteInput = document.getElementById('in-aporte');
+const pctDiretoInput = document.getElementById('in-pctDireto');
+preMoneyInput.value = capState.preMoney;
+aporteInput.value = capState.aporte;
+pctDiretoInput.value = capState.pctDireto;
+
+preMoneyInput.addEventListener('input', ()=>{ const v=parseFloat(preMoneyInput.value); if(!isNaN(v)) capState.preMoney=v; renderDiluicao(); });
+aporteInput.addEventListener('input', ()=>{ const v=parseFloat(aporteInput.value); if(!isNaN(v)) capState.aporte=v; renderDiluicao(); });
+pctDiretoInput.addEventListener('input', ()=>{ const v=parseFloat(pctDiretoInput.value); if(!isNaN(v)) capState.pctDireto=v; renderDiluicao(); });
+
+const capModeSwitch = document.getElementById('capModeSwitch');
+capModeSwitch.addEventListener('click', ()=>{
+  capState.mode = capState.mode==='value' ? 'pct' : 'value';
+  const isPct = capState.mode==='pct';
+  capModeSwitch.dataset.on = isPct;
+  capModeSwitch.setAttribute('aria-checked', isPct);
+  document.getElementById('capModeOnLabel').dataset.on = isPct;
+  document.getElementById('capModeOffLabel').dataset.on = !isPct;
+  document.getElementById('capInputsValue').style.display = isPct ? 'none' : '';
+  document.getElementById('capInputsPct').style.display = isPct ? '' : 'none';
+  renderDiluicao();
+});
+
+document.getElementById('useVplBtn').addEventListener('click', ()=>{
+  const r = runModel(state);
+  capState.preMoney = Math.max(0, Math.round(r.base.vpl));
+  preMoneyInput.value = capState.preMoney;
+  renderDiluicao();
+});
+
+renderDiluicao();
 
 })();
 </script>
