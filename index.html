@@ -102,6 +102,14 @@ header.page > div{ min-width:220px; flex:1 1 320px; }
 }
 .badge-live .dot{ width:7px;height:7px;border-radius:50%; background:var(--accent-strong); animation:pulse 2s infinite; }
 @media (prefers-reduced-motion: reduce){ .badge-live .dot{ animation:none; } }
+.badge-countdown{
+  display:inline-flex; align-items:center; gap:6px;
+  background:var(--warning-soft); color:var(--warning);
+  border-radius:100px; padding:6px 12px; font-size:12.5px; font-weight:600;
+  white-space:nowrap; font-family:"IBM Plex Mono",monospace;
+}
+.badge-countdown.urgent{ background:var(--negative-soft); color:var(--negative); }
+.header-badges{ display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
 @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
 
 .grid{ display:grid; gap:16px; }
@@ -241,13 +249,221 @@ table.sheet tr.total-row td{ font-weight:700; color:var(--text); border-top:1px 
 table.sheet tr.total-row td.rowlabel{ color:var(--text); }
 table.sheet td{ color:var(--text); }
 .sheet-note{ margin-top:10px; }
+
+/* ============================= LOGIN GATE ============================= */
+.login-overlay{
+  position:fixed; inset:0; z-index:1000; background:var(--bg);
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.login-card{
+  width:100%; max-width:380px; background:var(--surface); border:1px solid var(--border);
+  border-radius:16px; padding:32px 28px; box-shadow:var(--shadow);
+}
+.login-eyebrow{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--accent); font-weight:600; margin-bottom:8px; }
+.login-title{ font-family:"Fraunces","IBM Plex Sans",serif; font-weight:600; font-size:24px; margin:0 0 8px; color:var(--text); }
+.login-sub{ font-size:13px; color:var(--text-muted); line-height:1.5; margin:0 0 22px; }
+.login-field{ margin-bottom:14px; }
+.login-field label{ display:block; font-size:12px; color:var(--text-muted); margin-bottom:5px; }
+.login-field input{
+  width:100%; box-sizing:border-box; padding:10px 12px; border-radius:8px; border:1px solid var(--border);
+  background:var(--surface-2); color:var(--text); font-size:14px; font-family:"IBM Plex Sans",sans-serif;
+}
+.login-field input:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+.login-field-wrap{ position:relative; }
+.login-field-wrap input{ padding-right:40px; }
+.login-eye{
+  position:absolute; right:6px; top:50%; transform:translateY(-50%); width:30px; height:30px;
+  display:flex; align-items:center; justify-content:center; background:transparent; border:none;
+  cursor:pointer; color:var(--text-muted); padding:0; border-radius:6px;
+}
+.login-eye:hover{ color:var(--accent); background:var(--surface); }
+.login-eye svg{ width:18px; height:18px; }
+.login-btn{
+  width:100%; padding:11px; border-radius:8px; border:none; background:var(--accent); color:#fff;
+  font-size:14px; font-weight:600; cursor:pointer; margin-top:6px; font-family:"IBM Plex Sans",sans-serif;
+}
+.login-btn:hover{ background:var(--accent-strong); }
+.login-error{ margin-top:12px; font-size:12.5px; color:var(--negative); background:var(--negative-soft);
+  border-radius:8px; padding:8px 10px; }
+#mainWrap.hidden-until-auth{ display:none; }
 </style>
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
-
 </head>
 <body>
-<div class="wrap">
+
+
+<div id="loginGate" class="login-overlay">
+  <div class="login-card">
+    <div class="login-eyebrow">LAVAÍ × MK4U</div>
+    <h1 class="login-title">Acesso restrito</h1>
+    <p class="login-sub">Este simulador é confidencial. Complete a palavra de acesso e informe a senha para continuar.</p>
+    <form id="loginForm" autocomplete="off">
+      <div class="login-field">
+        <label for="loginWord">Complete a palavra: "inves___"</label>
+        <input type="text" id="loginWord" autocomplete="off" placeholder="Complete a palavra">
+      </div>
+      <div class="login-field">
+        <label for="loginPass">Senha</label>
+        <div class="login-field-wrap">
+          <input type="password" id="loginPass" autocomplete="off" placeholder="Senha">
+          <button type="button" class="login-eye" id="loginEyeBtn" aria-label="Mostrar senha" aria-pressed="false">
+            <svg id="loginEyeIconOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg id="loginEyeIconClosed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.3 20.3 0 0 1 5.06-5.94M9.9 4.24A9.6 9.6 0 0 1 12 4c7 0 11 8 11 8a20.3 20.3 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="login-btn">Entrar</button>
+      <div class="login-error" id="loginError" style="display:none;">Palavra ou senha incorretas.</div>
+    </form>
+  </div>
+</div>
+
+<div id="expiredGate" class="login-overlay" style="display:none;">
+  <div class="login-card">
+    <div class="login-eyebrow">LAVAÍ × MK4U</div>
+    <h1 class="login-title">Acesso expirado</h1>
+    <p class="login-sub">Seu acesso de 10 minutos a este simulador expirou. Para solicitar um novo acesso, envie um e-mail para <strong>taba@lavai.com.vc</strong>.</p>
+    <form id="adminForm" autocomplete="off">
+      <div class="login-field">
+        <label for="adminLogin">Login</label>
+        <input type="text" id="adminLogin" autocomplete="off" placeholder="Login">
+      </div>
+      <div class="login-field">
+        <label for="adminPass">Senha</label>
+        <div class="login-field-wrap">
+          <input type="password" id="adminPass" autocomplete="off" placeholder="Senha">
+          <button type="button" class="login-eye" id="adminEyeBtn" aria-label="Mostrar senha" aria-pressed="false">
+            <svg id="adminEyeIconOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg id="adminEyeIconClosed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.3 20.3 0 0 1 5.06-5.94M9.9 4.24A9.6 9.6 0 0 1 12 4c7 0 11 8 11 8a20.3 20.3 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="login-btn">Entrar</button>
+      <div class="login-error" id="adminError" style="display:none;">Login ou senha incorretos.</div>
+    </form>
+  </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const CORRECT_WORD = 'investir';
+  const CORRECT_PASS = 'valuationlavai#2027';
+  const SESSION_MS = 10*60*1000; // 10 minutos de acesso após o primeiro login
+  const gate = document.getElementById('loginGate');
+  const expiredGate = document.getElementById('expiredGate');
+  const wrap = document.getElementById('mainWrap');
+  const countdownEl = document.getElementById('sessionCountdown');
+  let expireTimer = null;
+  let countdownInterval = null;
+
+  function showExpired(){
+    if(expireTimer){ clearTimeout(expireTimer); expireTimer=null; }
+    if(countdownInterval){ clearInterval(countdownInterval); countdownInterval=null; }
+    countdownEl.style.display='none';
+    wrap.classList.add('hidden-until-auth');
+    gate.style.display='none';
+    expiredGate.style.display='flex';
+    try { sessionStorage.removeItem('mk4uAuthTime'); } catch(e){}
+  }
+
+  function updateCountdown(expiresAt){
+    const msLeft = expiresAt-Date.now();
+    if(msLeft<=0){ countdownEl.textContent='Acesso expira em 00:00'; return; }
+    const totalSec = Math.ceil(msLeft/1000);
+    const mm = String(Math.floor(totalSec/60)).padStart(2,'0');
+    const ss = String(totalSec%60).padStart(2,'0');
+    countdownEl.textContent = 'Acesso expira em '+mm+':'+ss;
+    countdownEl.classList.toggle('urgent', totalSec<=60);
+  }
+
+  function grantAccess(remainingMs){
+    gate.style.display='none';
+    expiredGate.style.display='none';
+    wrap.classList.remove('hidden-until-auth');
+    if(expireTimer) clearTimeout(expireTimer);
+    if(countdownInterval) clearInterval(countdownInterval);
+    expireTimer = setTimeout(showExpired, remainingMs);
+    const expiresAt = Date.now()+remainingMs;
+    countdownEl.style.display='inline-flex';
+    updateCountdown(expiresAt);
+    countdownInterval = setInterval(function(){ updateCountdown(expiresAt); }, 1000);
+  }
+
+  let authTime = null;
+  try { authTime = parseInt(sessionStorage.getItem('mk4uAuthTime'),10); } catch(e){}
+  if(authTime){
+    const elapsed = Date.now()-authTime;
+    if(elapsed < SESSION_MS){
+      grantAccess(SESSION_MS-elapsed);
+    } else {
+      showExpired();
+    }
+  }
+
+  function wireEye(btnId, inputId, openId, closedId){
+    const eyeBtn = document.getElementById(btnId);
+    const passInput = document.getElementById(inputId);
+    const eyeOpen = document.getElementById(openId);
+    const eyeClosed = document.getElementById(closedId);
+    eyeBtn.addEventListener('click', function(){
+      const showing = passInput.type==='text';
+      passInput.type = showing ? 'password' : 'text';
+      eyeOpen.style.display = showing ? '' : 'none';
+      eyeClosed.style.display = showing ? 'none' : '';
+      eyeBtn.setAttribute('aria-pressed', String(!showing));
+      eyeBtn.setAttribute('aria-label', showing ? 'Mostrar senha' : 'Ocultar senha');
+    });
+  }
+  wireEye('loginEyeBtn','loginPass','loginEyeIconOpen','loginEyeIconClosed');
+  wireEye('adminEyeBtn','adminPass','adminEyeIconOpen','adminEyeIconClosed');
+
+  document.getElementById('loginForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const word = document.getElementById('loginWord').value.trim().toLowerCase();
+    const pass = document.getElementById('loginPass').value;
+    if(word===CORRECT_WORD && pass===CORRECT_PASS){
+      try { sessionStorage.setItem('mk4uAuthTime', String(Date.now())); } catch(e){}
+      grantAccess(SESSION_MS);
+    } else {
+      document.getElementById('loginError').style.display='block';
+    }
+  });
+
+  // Login de reentrada, mostrado na tela de "acesso expirado" — permite
+  // renovar o acesso (mais 10 minutos) sem precisar solicitar por e-mail.
+  const ADMIN_LOGIN = 'lavai';
+  const ADMIN_PASS = 'vergueiro3558';
+  document.getElementById('adminForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const login = document.getElementById('adminLogin').value.trim().toLowerCase();
+    const pass = document.getElementById('adminPass').value;
+    if(login===ADMIN_LOGIN && pass===ADMIN_PASS){
+      document.getElementById('adminError').style.display='none';
+      try { sessionStorage.setItem('mk4uAuthTime', String(Date.now())); } catch(e){}
+      grantAccess(SESSION_MS);
+    } else {
+      document.getElementById('adminError').style.display='block';
+    }
+  });
+
+  // Dificultar (não bloqueia de verdade) copiar/inspecionar o código-fonte:
+  // desliga o menu de botão direito e as teclas de atalho mais comuns para
+  // ver/salvar o código-fonte ou abrir o DevTools.
+  document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+  document.addEventListener('keydown', function(e){
+    const k = (e.key||'').toLowerCase();
+    const mod = e.ctrlKey || e.metaKey;
+    const viewSourceOrSave = mod && !e.shiftKey && (k==='u' || k==='s');
+    const devtools = mod && e.shiftKey && (k==='i' || k==='j' || k==='c');
+    if(k==='f12' || viewSourceOrSave || devtools){
+      e.preventDefault();
+    }
+  });
+});
+</script>
+
+<div class="wrap hidden-until-auth" id="mainWrap">
 
   <header class="page">
     <div>
@@ -255,7 +471,10 @@ table.sheet td{ color:var(--text); }
       <h1>Valuation e retorno para investidores</h1>
       <p>Mesmos botões de cenário da aba Premissas da planilha — TIR, VPL, payback e múltiplo recalculam ao vivo conforme você testa.</p>
     </div>
-    <span class="badge-live"><span class="dot"></span>Recalcula em tempo real</span>
+    <div class="header-badges">
+      <span class="badge-live"><span class="dot"></span>Recalcula em tempo real</span>
+      <span class="badge-countdown" id="sessionCountdown" style="display:none;">Acesso expira em 10:00</span>
+    </div>
   </header>
 
   <!-- TABS -->
@@ -383,7 +602,7 @@ table.sheet td{ color:var(--text); }
   <div class="tab-panel" id="tab-captable">
     <div class="section-title"><h2>Quadro Societário — Histórico</h2><span class="n">2020 a 2025</span></div>
     <div class="panel">
-      <div class="sub">Quotas e participação de cada sócio ao longo dos aportes e diluições anteriores.</div>
+      <div class="sub">Quotas e participação de cada sócio ao longo dos aportes e diluições anteriores. Em 2025, o Co-CEO passa a deter 15% — diluição vinda apenas dos três Sócios Fundadores, proporcionalmente à fatia de cada um entre eles três (os demais sócios, os "Anjos", não são afetados).</div>
       <div class="table-scroll"><table class="sheet" id="tbl-captable-hist"></table></div>
     </div>
 
@@ -419,6 +638,12 @@ table.sheet td{ color:var(--text); }
     <div class="panel">
       <div class="sub">Participação de cada sócio antes e depois da rodada (base: quadro de 2025).</div>
       <div class="table-scroll"><table class="sheet" id="tbl-captable-diluicao"></table></div>
+    </div>
+
+    <div class="section-title"><h2>Quadro Societário — Pós-Investimento</h2><span class="n">novo cap table</span></div>
+    <div class="panel">
+      <div class="sub">Como fica a composição societária depois da rodada, já com o novo investidor incluído — ordenado do maior para o menor sócio.</div>
+      <div class="table-scroll"><table class="sheet" id="tbl-captable-pos"></table></div>
     </div>
   </div>
 
@@ -1380,24 +1605,24 @@ update();
 // não depende dos botões de premissas). 2025 é a base usada no simulador
 // de diluição abaixo.
 const CAP_TABLE_HIST = [
-  {name:'Maria Dulce',    y2020:500, y2021:488, y2023:477, y2024:420, y2025:326},
-  {name:'Jeremy',         y2020:500, y2021:488, y2023:476, y2024:418, y2025:303},
-  {name:'Taba',           y2020:0,   y2021:0,   y2023:0,   y2024:100, y2025:303},
-  {name:'Andrew',         y2020:0,   y2021:24,  y2023:24,  y2024:24,  y2025:24},
-  {name:'Xavier',         y2020:0,   y2021:49,  y2023:60,  y2024:60,  y2025:60},
-  {name:'Bertrand',       y2020:0,   y2021:35,  y2023:35,  y2024:35,  y2025:35},
-  {name:'Philippe',       y2020:0,   y2021:24,  y2023:24,  y2024:24,  y2025:24},
-  {name:'Antonio',        y2020:0,   y2021:6,   y2023:6,   y2024:6,   y2025:6},
-  {name:'Lara',           y2020:0,   y2021:11,  y2023:11,  y2024:11,  y2025:11},
-  {name:'Olivier',        y2020:0,   y2021:6,   y2023:6,   y2024:6,   y2025:6},
-  {name:'Morgan',         y2020:0,   y2021:6,   y2023:6,   y2024:6,   y2025:6},
-  {name:'Nico',           y2020:0,   y2021:6,   y2023:6,   y2024:6,   y2025:6},
-  {name:'Mathieu',        y2020:0,   y2021:6,   y2023:6,   y2024:6,   y2025:6},
-  {name:'Eric',           y2020:0,   y2021:10,  y2023:10,  y2024:10,  y2025:10},
-  {name:'Arthur',         y2020:0,   y2021:5,   y2023:5,   y2024:5,   y2025:5},
-  {name:'Manu',           y2020:0,   y2021:12,  y2023:24,  y2024:24,  y2025:24},
-  {name:'Pierre',         y2020:0,   y2021:0,   y2023:0,   y2024:0,   y2025:6},
-  {name:'Régis TOK&STOK', y2020:0,   y2021:0,   y2023:0,   y2024:15,  y2025:15},
+  {name:'Sócio Fundador 1', y2020:500, y2021:488, y2023:477, y2024:420, y2025:266.4},
+  {name:'Sócio Fundador 2', y2020:500, y2021:488, y2023:476, y2024:418, y2025:247.6},
+  {name:'Sócio Fundador 3', y2020:0,   y2021:0,   y2023:0,   y2024:100, y2025:247.6},
+  {name:'Anjo 1',  y2020:0,   y2021:24,  y2023:24,  y2024:24,  y2025:24},
+  {name:'Anjo 2',  y2020:0,   y2021:49,  y2023:60,  y2024:60,  y2025:60},
+  {name:'Anjo 3',  y2020:0,   y2021:35,  y2023:35,  y2024:35,  y2025:35},
+  {name:'Anjo 4',  y2020:0,   y2021:24,  y2023:24,  y2024:24,  y2025:24},
+  {name:'Anjo 5',  y2020:0,   y2021:6,   y2023:6,   y2024:6,   y2025:6},
+  {name:'Anjo 6',  y2020:0,   y2021:11,  y2023:11,  y2024:11,  y2025:11},
+  {name:'Anjo 7',  y2020:0,   y2021:6,   y2023:6,   y2024:6,   y2025:6},
+  {name:'Anjo 8',  y2020:0,   y2021:6,   y2023:6,   y2024:6,   y2025:6},
+  {name:'Anjo 9',  y2020:0,   y2021:6,   y2023:6,   y2024:6,   y2025:6},
+  {name:'Anjo 10', y2020:0,   y2021:6,   y2023:6,   y2024:6,   y2025:6},
+  {name:'Anjo 11', y2020:0,   y2021:10,  y2023:10,  y2024:10,  y2025:10},
+  {name:'Anjo 12', y2020:0,   y2021:5,   y2023:5,   y2024:5,   y2025:5},
+  {name:'Anjo 13', y2020:0,   y2021:12,  y2023:24,  y2024:24,  y2025:24},
+  {name:'Co-CEO',  y2020:0,   y2021:0,   y2023:0,   y2024:0,   y2025:176.4},
+  {name:'Anjo 14', y2020:0,   y2021:0,   y2023:0,   y2024:15,  y2025:15},
 ];
 const CAP_TABLE_YEARS = ['y2020','y2021','y2023','y2024','y2025'];
 const CAP_TABLE_YEAR_LABELS = {y2020:'2020', y2021:'2021', y2023:'2023', y2024:'2024', y2025:'2025'};
@@ -1413,12 +1638,12 @@ function renderCapTableHist(){
     tbody += `<tr><td class="rowlabel">${row.name}</td>`;
     CAP_TABLE_YEARS.forEach(y=>{
       const pct = totals[y]>0 ? row[y]/totals[y] : 0;
-      tbody += `<td>${row[y]}</td><td>${fmtPct(pct)}</td>`;
+      tbody += `<td>${row[y].toLocaleString('pt-BR',{maximumFractionDigits:1})}</td><td>${fmtPct(pct)}</td>`;
     });
     tbody += '</tr>';
   });
   tbody += `<tr class="total-row"><td class="rowlabel">TOTAL</td>`;
-  CAP_TABLE_YEARS.forEach(y=>{ tbody += `<td>${totals[y]}</td><td>100,0%</td>`; });
+  CAP_TABLE_YEARS.forEach(y=>{ tbody += `<td>${totals[y].toLocaleString('pt-BR',{maximumFractionDigits:1})}</td><td>100,0%</td>`; });
   tbody += '</tr></tbody>';
   document.getElementById('tbl-captable-hist').innerHTML = thead+tbody;
 }
@@ -1480,6 +1705,20 @@ function renderDiluicao(){
   tbody += `<tr class="total-row"><td class="rowlabel">TOTAL</td><td>${d.totalQuotas.toLocaleString('pt-BR',{maximumFractionDigits:1})}</td><td>100,0%</td><td>${d.totalQuotasPos.toLocaleString('pt-BR',{maximumFractionDigits:1})}</td><td>100,0%</td><td></td></tr>`;
   tbody += '</tbody>';
   document.getElementById('tbl-captable-diluicao').innerHTML = thead+tbody;
+
+  // Quadro societário pós-investimento — visão "limpa", só o cap table novo,
+  // sócios ordenados do maior para o menor, já com o investidor incluído.
+  const posRows = d.rows.map(r=>({name:r.name, quotas:r.quotasDepois, pct:r.pctDepois}))
+    .sort((a,b)=>b.pct-a.pct);
+  let theadPos = '<thead><tr><th class="rowlabel">Sócio</th><th>Quotas</th><th>%</th></tr></thead>';
+  let tbodyPos = '<tbody>';
+  posRows.forEach(r=>{
+    const rowCls = r.name==='Novo Investidor' ? 'section-row' : '';
+    tbodyPos += `<tr class="${rowCls}"><td class="rowlabel">${r.name}</td><td>${r.quotas.toLocaleString('pt-BR',{maximumFractionDigits:1})}</td><td>${fmtPct(r.pct)}</td></tr>`;
+  });
+  tbodyPos += `<tr class="total-row"><td class="rowlabel">TOTAL</td><td>${d.totalQuotasPos.toLocaleString('pt-BR',{maximumFractionDigits:1})}</td><td>100,0%</td></tr>`;
+  tbodyPos += '</tbody>';
+  document.getElementById('tbl-captable-pos').innerHTML = theadPos+tbodyPos;
 }
 
 const preMoneyInput = document.getElementById('in-preMoney');
