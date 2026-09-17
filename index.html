@@ -286,6 +286,12 @@ table.sheet td{ color:var(--text); }
 .login-btn:hover{ background:var(--accent-strong); }
 .login-error{ margin-top:12px; font-size:12.5px; color:var(--negative); background:var(--negative-soft);
   border-radius:8px; padding:8px 10px; }
+.login-mode-toggle{ display:flex; gap:6px; margin-bottom:18px; background:var(--surface-2); border-radius:8px; padding:4px; }
+.login-mode-btn{
+  flex:1; padding:8px 6px; border:none; border-radius:6px; background:transparent; color:var(--text-muted);
+  font-size:12.5px; font-weight:600; cursor:pointer; font-family:"IBM Plex Sans",sans-serif;
+}
+.login-mode-btn.active{ background:var(--surface); color:var(--accent-strong); box-shadow:var(--shadow); }
 #mainWrap.hidden-until-auth{ display:none; }
 </style>
 
@@ -298,20 +304,42 @@ table.sheet td{ color:var(--text); }
   <div class="login-card">
     <div class="login-eyebrow">LAVAÍ × MK4U</div>
     <h1 class="login-title">Acesso restrito</h1>
-    <p class="login-sub">Este simulador é confidencial. Complete a palavra de acesso e informe a senha para continuar.</p>
+    <p class="login-sub" id="loginSub">Este simulador é confidencial. Complete a palavra de acesso e informe a senha para continuar. O acesso de investidor é de uso único — dura 5 minutos e não pode ser renovado com a mesma senha.</p>
+    <div class="login-mode-toggle">
+      <button type="button" class="login-mode-btn active" id="modeInvestorBtn" data-mode="investidor">Sou investidor</button>
+      <button type="button" class="login-mode-btn" id="modeAdminBtn" data-mode="admin">Sou administrador</button>
+    </div>
     <form id="loginForm" autocomplete="off">
-      <div class="login-field">
-        <label for="loginWord">Complete a palavra: "inves___"</label>
-        <input type="text" id="loginWord" autocomplete="off" placeholder="Complete a palavra">
+      <div id="investorFields">
+        <div class="login-field">
+          <label for="loginWord">Complete a palavra: "inves___"</label>
+          <input type="text" id="loginWord" autocomplete="off" placeholder="Complete a palavra">
+        </div>
+        <div class="login-field">
+          <label for="loginPass">Senha</label>
+          <div class="login-field-wrap">
+            <input type="password" id="loginPass" autocomplete="off" placeholder="Senha">
+            <button type="button" class="login-eye" id="loginEyeBtn" aria-label="Mostrar senha" aria-pressed="false">
+              <svg id="loginEyeIconOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg id="loginEyeIconClosed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.3 20.3 0 0 1 5.06-5.94M9.9 4.24A9.6 9.6 0 0 1 12 4c7 0 11 8 11 8a20.3 20.3 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="login-field">
-        <label for="loginPass">Senha</label>
-        <div class="login-field-wrap">
-          <input type="password" id="loginPass" autocomplete="off" placeholder="Senha">
-          <button type="button" class="login-eye" id="loginEyeBtn" aria-label="Mostrar senha" aria-pressed="false">
-            <svg id="loginEyeIconOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            <svg id="loginEyeIconClosed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.3 20.3 0 0 1 5.06-5.94M9.9 4.24A9.6 9.6 0 0 1 12 4c7 0 11 8 11 8a20.3 20.3 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-          </button>
+      <div id="masterFieldsOnLogin" style="display:none;">
+        <div class="login-field">
+          <label for="loginAdminUser">Login</label>
+          <input type="text" id="loginAdminUser" autocomplete="off" placeholder="Login">
+        </div>
+        <div class="login-field">
+          <label for="loginAdminPass">Senha</label>
+          <div class="login-field-wrap">
+            <input type="password" id="loginAdminPass" autocomplete="off" placeholder="Senha">
+            <button type="button" class="login-eye" id="loginAdminEyeBtn" aria-label="Mostrar senha" aria-pressed="false">
+              <svg id="loginAdminEyeIconOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg id="loginAdminEyeIconClosed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.3 20.3 0 0 1 5.06-5.94M9.9 4.24A9.6 9.6 0 0 1 12 4c7 0 11 8 11 8a20.3 20.3 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
         </div>
       </div>
       <button type="submit" class="login-btn">Entrar</button>
@@ -324,7 +352,7 @@ table.sheet td{ color:var(--text); }
   <div class="login-card">
     <div class="login-eyebrow">LAVAÍ × MK4U</div>
     <h1 class="login-title">Acesso expirado</h1>
-    <p class="login-sub">Seu acesso de 10 minutos a este simulador expirou. Para solicitar um novo acesso, envie um e-mail para <strong>taba@lavai.com.vc</strong>.</p>
+    <p class="login-sub">Seu acesso de 5 minutos a este simulador expirou e não pode ser renovado com a mesma senha. Para solicitar um novo acesso, envie um e-mail para <strong>taba@lavai.com.vc</strong>.</p>
     <form id="adminForm" autocomplete="off">
       <div class="login-field">
         <label for="adminLogin">Login</label>
@@ -349,13 +377,22 @@ table.sheet td{ color:var(--text); }
 document.addEventListener('DOMContentLoaded', function(){
   const CORRECT_WORD = 'investir';
   const CORRECT_PASS = 'valuationlavai#2027';
-  const SESSION_MS = 10*60*1000; // 10 minutos de acesso após o primeiro login
+  const ADMIN_LOGIN = 'lavai';
+  const ADMIN_PASS = 'vergueiro3558';
+  const SESSION_MS = 5*60*1000; // 5 minutos de acesso, contados a partir do primeiro login
   const gate = document.getElementById('loginGate');
   const expiredGate = document.getElementById('expiredGate');
   const wrap = document.getElementById('mainWrap');
   const countdownEl = document.getElementById('sessionCountdown');
   let expireTimer = null;
   let countdownInterval = null;
+
+  function investorUsed(){
+    try { return localStorage.getItem('mk4uInvestorUsed')==='1'; } catch(e){ return false; }
+  }
+  function markInvestorUsed(){
+    try { localStorage.setItem('mk4uInvestorUsed','1'); } catch(e){}
+  }
 
   function showExpired(){
     if(expireTimer){ clearTimeout(expireTimer); expireTimer=null; }
@@ -416,24 +453,68 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
   wireEye('loginEyeBtn','loginPass','loginEyeIconOpen','loginEyeIconClosed');
+  wireEye('loginAdminEyeBtn','loginAdminPass','loginAdminEyeIconOpen','loginAdminEyeIconClosed');
   wireEye('adminEyeBtn','adminPass','adminEyeIconOpen','adminEyeIconClosed');
+
+  // Alterna, na própria página de login, entre o formulário de investidor
+  // (palavra + senha, uso único de 5 min) e o de administrador (login master,
+  // sem limite de usos).
+  let loginMode = 'investidor';
+  const investorFieldsEl = document.getElementById('investorFields');
+  const masterFieldsEl = document.getElementById('masterFieldsOnLogin');
+  const modeInvestorBtn = document.getElementById('modeInvestorBtn');
+  const modeAdminBtn = document.getElementById('modeAdminBtn');
+  const loginSubEl = document.getElementById('loginSub');
+  function setLoginMode(mode){
+    loginMode = mode;
+    const isAdmin = mode==='admin';
+    investorFieldsEl.style.display = isAdmin ? 'none' : '';
+    masterFieldsEl.style.display = isAdmin ? '' : 'none';
+    modeInvestorBtn.classList.toggle('active', !isAdmin);
+    modeAdminBtn.classList.toggle('active', isAdmin);
+    document.getElementById('loginError').style.display='none';
+    loginSubEl.textContent = isAdmin
+      ? 'Acesso de administrador — sem limite de usos.'
+      : 'Este simulador é confidencial. Complete a palavra de acesso e informe a senha para continuar. O acesso de investidor é de uso único — dura 5 minutos e não pode ser renovado com a mesma senha.';
+  }
+  modeInvestorBtn.addEventListener('click', function(){ setLoginMode('investidor'); });
+  modeAdminBtn.addEventListener('click', function(){ setLoginMode('admin'); });
 
   document.getElementById('loginForm').addEventListener('submit', function(e){
     e.preventDefault();
+    const errEl = document.getElementById('loginError');
+    if(loginMode==='admin'){
+      const login = document.getElementById('loginAdminUser').value.trim().toLowerCase();
+      const pass = document.getElementById('loginAdminPass').value;
+      if(login===ADMIN_LOGIN && pass===ADMIN_PASS){
+        try { sessionStorage.setItem('mk4uAuthTime', String(Date.now())); } catch(e){}
+        grantAccess(SESSION_MS);
+      } else {
+        errEl.textContent = 'Login ou senha incorretos.';
+        errEl.style.display='block';
+      }
+      return;
+    }
+    if(investorUsed()){
+      errEl.textContent = 'Este acesso de investidor já foi utilizado e não pode ser reaproveitado. Solicite um novo acesso a taba@lavai.com.vc.';
+      errEl.style.display='block';
+      return;
+    }
     const word = document.getElementById('loginWord').value.trim().toLowerCase();
     const pass = document.getElementById('loginPass').value;
     if(word===CORRECT_WORD && pass===CORRECT_PASS){
+      markInvestorUsed();
       try { sessionStorage.setItem('mk4uAuthTime', String(Date.now())); } catch(e){}
       grantAccess(SESSION_MS);
     } else {
-      document.getElementById('loginError').style.display='block';
+      errEl.textContent = 'Palavra ou senha incorretas.';
+      errEl.style.display='block';
     }
   });
 
-  // Login de reentrada, mostrado na tela de "acesso expirado" — permite
-  // renovar o acesso (mais 10 minutos) sem precisar solicitar por e-mail.
-  const ADMIN_LOGIN = 'lavai';
-  const ADMIN_PASS = 'vergueiro3558';
+  // Login de reentrada, mostrado também na tela de "acesso expirado" — dá ao
+  // administrador uma segunda forma de renovar o acesso sem precisar voltar
+  // à página inicial.
   document.getElementById('adminForm').addEventListener('submit', function(e){
     e.preventDefault();
     const login = document.getElementById('adminLogin').value.trim().toLowerCase();
