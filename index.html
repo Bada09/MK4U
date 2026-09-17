@@ -275,7 +275,7 @@ table.sheet td{ color:var(--text); }
     <!-- CONTROLS -->
     <section class="panel">
       <h2>Painel de simulação — botões</h2>
-      <div class="sub">Estratégia Global = Estratégia Atual (78 máquinas, fixa) + Estratégia MK4U (torres em condomínios, cronograma de instalação da planilha).</div>
+      <div class="sub">Estratégia Global = Operação Padrão (78 máquinas, fixa) + Parceria MK4U (torres em condomínios, cronograma de instalação da planilha).</div>
       <div class="controls-grid" id="controls"></div>
       <div class="reset-row"><button class="reset" id="resetBtn">Restaurar padrão da planilha</button></div>
     </section>
@@ -298,7 +298,7 @@ table.sheet td{ color:var(--text); }
       </div>
       <div class="panel chart-card">
         <h2>EBITDA Global mensal</h2>
-        <div class="sub">Decomposto entre Estratégia Atual (estável) e Estratégia MK4U (cresce com as torres).</div>
+        <div class="sub">Decomposto entre Operação Padrão (estável) e Parceria MK4U (cresce com as torres).</div>
         <div class="chart-svg-wrap"><svg id="ebitdaChart" viewBox="0 0 600 260" preserveAspectRatio="xMidYMid meet"></svg></div>
         <div class="chart-legend" id="ebitdaLegend"></div>
       </div>
@@ -307,9 +307,9 @@ table.sheet td{ color:var(--text); }
 
   <!-- TAB: OPERAÇÃO MK4U -->
   <div class="tab-panel" id="tab-opmk4u">
-    <div class="section-title"><h2>Operação — Estratégia MK4U</h2><span class="n">mês a mês, 60 meses</span></div>
+    <div class="section-title"><h2>Operação — Parceria MK4U</h2><span class="n">mês a mês, 60 meses</span></div>
     <div class="panel">
-      <div class="sub">Replica a aba <span class="mono">Operação_Estrategia_MK4U</span> — torres, receita, custos, EBITDA, CAPEX e financiamento via consórcio da Estratégia MK4U.</div>
+      <div class="sub">Replica a aba <span class="mono">Operação_Estrategia_MK4U</span> — torres, receita, custos, EBITDA, CAPEX e financiamento via consórcio da Parceria MK4U.</div>
       <div class="table-scroll"><table class="sheet" id="tbl-opmk4u"></table></div>
     </div>
   </div>
@@ -318,7 +318,7 @@ table.sheet td{ color:var(--text); }
   <div class="tab-panel" id="tab-opcons">
     <div class="section-title"><h2>Operação Consolidada — Resultado Global</h2><span class="n">mês a mês, 60 meses</span></div>
     <div class="panel">
-      <div class="sub">Replica a aba <span class="mono">Operação_Consolidada</span> — soma da Estratégia Atual (78 máquinas fixas) com a Estratégia MK4U.</div>
+      <div class="sub">Replica a aba <span class="mono">Operação_Consolidada</span> — soma da Operação Padrão (78 máquinas fixas) com a Parceria MK4U.</div>
       <div class="table-scroll"><table class="sheet" id="tbl-opcons"></table></div>
     </div>
   </div>
@@ -386,7 +386,7 @@ C.WACC_AM = Math.pow(1+C.WACC_AA, 1/12)-1;
 // Torres ativas (fim do mês) - input schedule from the workbook, months 1..60
 const TORRES = [2,5,8,18,25,35,45,60,75,90,100,100,100,120,140,155,170,190,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200];
 
-// Manutenção residual — histórico mensal (Estratégia Atual), meses 1..60, R$/mês a preço-base
+// Manutenção residual — histórico mensal (Operação Padrão), meses 1..60, R$/mês a preço-base
 const MANUT_ANCHOR = [-25178.32,-27539.73,-27729.69,-30103.28,-29224.77,-26650.97,-26120.68,-24867.95,-25089.33,-23697.88,-24087.65,-24909.09,-23829.12,-26063.25,-26337.83,-28358.02,-27119.67,-25312.71,-24864.96,-23750.38,-23964.86,-22610.26,-22974.73,-23719.06,-22748.36,-24770.8,-25053.63,-26542.08,-25821.1,-23770.6,-23377.04,-22449.34,-22698.76,-21451.04,-21859.46,-22615.4,-21831.47,-23743.33,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66,-24080.66];
 
 const N = 60;
@@ -519,7 +519,7 @@ function runModel(p){
     const necessidadeCaixa = pmtTotal+jurosLance;
     const resultOperMK4U = lucroLiqMK4U-necessidadeCaixa;
 
-    // Estratégia Atual (fixa: 78 máquinas)
+    // Operação Padrão (fixa: 78 máquinas)
     const receitaAtual = 90000*infAnual;
     const impostosAtual = -receitaAtual*C.ImpostosPct;
     const ciclosAtual = 78*(C.CiclosTorreMes/C.MaquinasPorTorre);
@@ -966,35 +966,35 @@ function buildOpMK4URows(om){
 function buildOpConsRows(oc){
   return [
     {type:'section', label:'MÁQUINAS E TORRES'},
-    {type:'data', label:'Máquinas — Estratégia Atual', data:oc.maquinasAtual, fmt:'int'},
-    {type:'data', label:'Máquinas — Estratégia MK4U', data:oc.maquinasMK4U, fmt:'int'},
+    {type:'data', label:'Máquinas — Operação Padrão', data:oc.maquinasAtual, fmt:'int'},
+    {type:'data', label:'Máquinas — Parceria MK4U', data:oc.maquinasMK4U, fmt:'int'},
     {type:'total', label:'Máquinas — TOTAL GLOBAL', data:oc.maquinasTotal, fmt:'int'},
-    {type:'data', label:'Torres ativas — Estratégia MK4U', data:oc.torresMK4U, fmt:'int'},
+    {type:'data', label:'Torres ativas — Parceria MK4U', data:oc.torresMK4U, fmt:'int'},
     {type:'section', label:'RECEITA'},
-    {type:'data', label:'Receita Bruta — Estratégia Atual', data:oc.receitaAtual},
-    {type:'data', label:'Receita Bruta — Estratégia MK4U', data:oc.receitaMK4U},
+    {type:'data', label:'Receita Bruta — Operação Padrão', data:oc.receitaAtual},
+    {type:'data', label:'Receita Bruta — Parceria MK4U', data:oc.receitaMK4U},
     {type:'total', label:'Receita Bruta — GLOBAL', data:oc.receitaGlobal},
     {type:'section', label:'IMPOSTOS, ROYALTIES E FEE MK4U'},
-    {type:'data', label:'Impostos s/ receita — Estratégia Atual', data:oc.impostosAtual},
-    {type:'data', label:'Impostos s/ receita (9,25%) — Estratégia MK4U', data:oc.impostosMK4U},
-    {type:'data', label:'Royalties (2,7%, contratual) — Estratégia Atual', data:oc.royaltiesAtual},
-    {type:'data', label:'Comissão condomínio (Botão 4) — Estratégia MK4U', data:oc.comissaoCond},
-    {type:'data', label:'Fee MK4U (5%) — Estratégia MK4U', data:oc.feeMK4U},
+    {type:'data', label:'Impostos s/ receita — Operação Padrão', data:oc.impostosAtual},
+    {type:'data', label:'Impostos s/ receita (9,25%) — Parceria MK4U', data:oc.impostosMK4U},
+    {type:'data', label:'Royalties (2,7%, contratual) — Operação Padrão', data:oc.royaltiesAtual},
+    {type:'data', label:'Comissão condomínio (Botão 4) — Parceria MK4U', data:oc.comissaoCond},
+    {type:'data', label:'Fee MK4U (5%) — Parceria MK4U', data:oc.feeMK4U},
     {type:'total', label:'TOTAL Impostos + Royalties + Fee — GLOBAL', data:oc.totalImpostosGlobal},
     {type:'section', label:'CUSTOS OPERACIONAIS (CMV + OPEX/RH)'},
-    {type:'data', label:'CMV total — Estratégia Atual', data:oc.cmvAtual},
-    {type:'data', label:'Custo variável (água+luz+químico) — Estratégia MK4U', data:oc.cmvMK4U},
-    {type:'data', label:'OPEX total — Estratégia Atual (78 máquinas fixas)', data:oc.opexAtual},
+    {type:'data', label:'CMV total — Operação Padrão', data:oc.cmvAtual},
+    {type:'data', label:'Custo variável (água+luz+químico) — Parceria MK4U', data:oc.cmvMK4U},
+    {type:'data', label:'OPEX total — Operação Padrão (78 máquinas fixas)', data:oc.opexAtual},
     {type:'data', label:'OPEX incremental por bloco de 150 máq. (corporativo)', data:oc.opexIncremental},
     {type:'data', label:'Pró-labore da diretoria (corporativo)', data:oc.proLabore},
     {type:'total', label:'TOTAL Custos Operacionais — GLOBAL', data:oc.totalCustosGlobal},
     {type:'section', label:'EBITDA'},
-    {type:'data', label:'EBITDA — Estratégia Atual', data:oc.ebitdaAtual},
-    {type:'data', label:'EBITDA — Estratégia MK4U', data:oc.ebitdaMK4U},
+    {type:'data', label:'EBITDA — Operação Padrão', data:oc.ebitdaAtual},
+    {type:'data', label:'EBITDA — Parceria MK4U', data:oc.ebitdaMK4U},
     {type:'total', label:'EBITDA — GLOBAL', data:oc.ebitdaGlobal},
     {type:'data', label:'Margem EBITDA GLOBAL', data:oc.margemEbitdaGlobal, fmt:'pct'},
     {type:'section', label:'CAPEX E FINANCIAMENTO (ESTRATÉGIA MK4U)'},
-    {type:'data', label:'CAPEX total do mês — Estratégia MK4U', data:oc.capexMK4U},
+    {type:'data', label:'CAPEX total do mês — Parceria MK4U', data:oc.capexMK4U},
     {type:'data', label:'Necessidade de caixa do financiamento — MK4U', data:oc.necessidadeCaixaMK4U},
     {type:'data', label:'Lucro Líquido pós-depreciação — MK4U', data:oc.lucroLiqMK4U},
     {type:'data', label:'Resultado Líquido Operacional pós-financiamento — MK4U', data:oc.resultLiqOperMK4U},
@@ -1006,7 +1006,7 @@ function buildOpConsRows(oc){
 
 function buildDreRows(dre){
   return [
-    {type:'data', label:'dos quais, Receita Bruta — Estratégia MK4U', data:dre.receitaBrutaMK4U},
+    {type:'data', label:'dos quais, Receita Bruta — Parceria MK4U', data:dre.receitaBrutaMK4U},
     {type:'data', label:'Receita Bruta', data:dre.receitaBruta},
     {type:'data', label:'(-) Impostos s/ Receita', data:dre.impostos},
     {type:'data', label:'(-) Comissão Condomínio, Fee MK4U e Comissão do Parceiro', data:dre.comissoesFees},
@@ -1061,8 +1061,8 @@ function renderHighlights(r){
   }
 
   if(h.crossoverIdx>=0){
-    cards.push({title:'MK4U ultrapassa a Estratégia Atual', value:'Mês '+(h.crossoverIdx+1),
-      sub:'A partir desse mês, o EBITDA da Estratégia MK4U passa a ser maior que o da Estratégia Atual (78 máquinas fixas).'});
+    cards.push({title:'MK4U ultrapassa a Operação Padrão', value:'Mês '+(h.crossoverIdx+1),
+      sub:'A partir desse mês, o EBITDA da Parceria MK4U passa a ser maior que o da Operação Padrão (78 máquinas fixas).'});
   }
 
   cards.push({title:'Parque de torres atinge o teto', value:'Mês '+(h.plateauIdx+1)+' ('+fmtInt(h.maxTorres)+' torres)',
@@ -1103,7 +1103,7 @@ function renderHighlights(r){
     const ebitdaPhrase = h.negMonths===0
       ? 'o EBITDA Global já nasce positivo e nunca fica negativo nas premissas atuais'
       : `o EBITDA Global vira positivo a partir do mês ${h.firstPositiveIdx+1}`;
-    noteEl.innerHTML = `Com essas premissas, ${ebitdaPhrase}. O crescimento é puxado pela instalação das torres da Estratégia MK4U até o mês ${h.plateauIdx+1}, quando o parque atinge seu teto de ${fmtInt(h.maxTorres)} torres; daí em diante, o EBITDA só sobe pelo reajuste anual de preço e custos. A margem EBITDA Global evolui de <strong>${fmtPct(h.dreA.margemEbitda[0])}</strong> no Ano 1 para <strong>${fmtPct(h.dreA.margemEbitda[4])}</strong> no Ano 5, e o investidor recupera o capital investido em <strong>${r.base.payback} meses</strong> no cenário Base.`;
+    noteEl.innerHTML = `Com essas premissas, ${ebitdaPhrase}. O crescimento é puxado pela instalação das torres da Parceria MK4U até o mês ${h.plateauIdx+1}, quando o parque atinge seu teto de ${fmtInt(h.maxTorres)} torres; daí em diante, o EBITDA só sobe pelo reajuste anual de preço e custos. A margem EBITDA Global evolui de <strong>${fmtPct(h.dreA.margemEbitda[0])}</strong> no Ano 1 para <strong>${fmtPct(h.dreA.margemEbitda[4])}</strong> no Ano 5, e o investidor recupera o capital investido em <strong>${r.base.payback} meses</strong> no cenário Base.`;
   }
 }
 
@@ -1154,7 +1154,7 @@ function update(){
 
   const legendEl = document.getElementById('ebitdaLegend');
   if(legendEl){
-    legendEl.innerHTML = `<span><i style="background:${accent2Color}"></i>Estratégia Atual</span><span><i style="background:${accentColor}"></i>Estratégia MK4U</span>`;
+    legendEl.innerHTML = `<span><i style="background:${accent2Color}"></i>Operação Padrão</span><span><i style="background:${accentColor}"></i>Parceria MK4U</span>`;
   }
 
   renderSheetTable(document.getElementById('tbl-opmk4u'), buildOpMK4URows(r.om), monthsHeader, 'Operação MK4U');
