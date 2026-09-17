@@ -352,7 +352,7 @@ table.sheet td{ color:var(--text); }
   </div>
 
   <footer class="note">
-    <strong>Metodologia:</strong> replica as fórmulas da planilha <span class="mono">LAVAI_MK4U_UnitEconomics_Global_5anos.xlsx</span> (abas Premissas, Operação_Estrategia_MK4U, PL_Global_Consolidado_60m, Operação_Consolidada, DRE_Geral_Mensal, DRE_Geral_Anual e Valuation_Investidores) — validado célula a célula contra o recálculo da planilha para múltiplas combinações de botões. Fluxo de caixa do investidor = EBITDA Global − CAPEX de torres (projeto não alavancado, como no cenário "C" da aba Valuation). Payback simples conta meses de fluxo acumulado negativo; TIR e VPL usam a taxa de desconto mensal equivalente ao WACC de 20% a.a. da aba Valuation. Premissas fixas nesta ferramenta (não controladas pelos botões): cronograma de instalação de torres, impostos (PIS+COFINS 9,25%), inflação anual (10% receita / 5% custos), depreciação em 120 meses e financiamento via consórcio. Ferramenta de apoio — a planilha permanece a fonte oficial.
+    <strong>Metodologia:</strong> replica as fórmulas da planilha <span class="mono">LAVAI_MK4U_UnitEconomics_Global_5anos.xlsx</span> (abas Premissas, Operação_Estrategia_MK4U, PL_Global_Consolidado_60m, Operação_Consolidada, DRE_Geral_Mensal, DRE_Geral_Anual e Valuation_Investidores) — validado célula a célula contra o recálculo da planilha para múltiplas combinações de botões. Fluxo de caixa do investidor = EBITDA Global − CAPEX de torres (projeto não alavancado, como no cenário "C" da aba Valuation). O Valor Terminal por múltiplo EV/EBITDA é Enterprise Value (dívida + equity); para chegar no Equity Value que o investidor recebe, subtraímos a dívida líquida remanescente no Mês 60 — saldo do consórcio ainda em amortização (Price, 48 meses) mais o saldo do empréstimo do lance (bullet, nunca amortizado neste modelo) — antes de somar ao fluxo de caixa. Payback simples conta meses de fluxo acumulado negativo; TIR e VPL usam a taxa de desconto mensal equivalente ao WACC de 20% a.a. da aba Valuation. Premissas fixas nesta ferramenta (não controladas pelos botões): cronograma de instalação de torres, impostos (PIS+COFINS 9,25%), inflação anual (10% receita / 5% custos), depreciação em 120 meses e financiamento via consórcio. Ferramenta de apoio — a planilha permanece a fonte oficial.
   </footer>
 </div>
 
@@ -596,9 +596,29 @@ function runModel(p){
   let ebitdaAno5=0;
   for(let m=49;m<=60;m++) ebitdaAno5+=ebitdaGlobal[m];
 
+  // Dívida líquida remanescente no Mês 60 — o múltiplo EV/EBITDA dá o Enterprise
+  // Value (dívida + equity). Para chegar no que o investidor efetivamente recebe
+  // (Equity Value), subtraímos a dívida ainda em aberto na saída: o saldo do
+  // consórcio ainda em amortização (Price, 48 meses) de cada carta contratada ao
+  // longo dos 60 meses, mais o saldo do empréstimo do lance (bullet, nunca
+  // amortizado neste modelo — Operação_Estrategia_MK4U, linha 61).
+  let consorcioOutstandingM60 = 0;
+  for(let s=1; s<=N; s++){
+    const pmt = pmtCarta[s];
+    if(!pmt) continue;
+    const k = Math.min(N-s+1, C.PrazoConsorcioMeses);
+    const remainingN = C.PrazoConsorcioMeses - k;
+    if(remainingN<=0) continue;
+    const i = C.TaxaConsorcioAM;
+    consorcioOutstandingM60 += pmt*(1-Math.pow(1+i,-remainingN))/i;
+  }
+  const dividaLiquidaM60 = consorcioOutstandingM60 + saldoLance[N];
+
   function scenario(mult){
     const cf=[0].concat(unleveredFCF);
-    cf[cf.length-1] += mult*ebitdaAno5;
+    const valorTerminalEV = mult*ebitdaAno5;
+    const valorTerminalEquity = valorTerminalEV - dividaLiquidaM60;
+    cf[cf.length-1] += valorTerminalEquity;
     const tirm = irrMonthly(cf);
     const tira = Math.pow(1+tirm,12)-1;
     const vpl = npvCalc(C.WACC_AM, cf.slice(1))+cf[0];
@@ -610,7 +630,9 @@ function runModel(p){
     // discounted payback (uses same WACC monthly rate)
     let cumD=0, paybackD=0;
     for(let t=1;t<cf.length;t++){ cumD+= cf[t]/Math.pow(1+C.WACC_AM,t); if(cumD<0) paybackD++; }
-    return { tir:tira, vpl, moic, payback, paybackD, investido, recebido, valorTerminal: mult*ebitdaAno5, cumSeries: (function(){const arr=[];let s=0;for(let t=1;t<cf.length;t++){s+=cf[t]; arr.push(s);} return arr;})() };
+    return { tir:tira, vpl, moic, payback, paybackD, investido, recebido,
+      valorTerminal: valorTerminalEquity, valorTerminalEV, dividaLiquidaM60,
+      cumSeries: (function(){const arr=[];let s=0;for(let t=1;t<cf.length;t++){s+=cf[t]; arr.push(s);} return arr;})() };
   }
 
   // DRE_Geral_Anual: each year sums the 12 corresponding months; margin lines
@@ -1130,7 +1152,9 @@ function update(){
     return `<div class="scenario-card ${s.key==='base'?'is-base':''}">
       <div class="stag">${s.label}</div>
       <div class="mult">Múltiplo EV/EBITDA: ${s.mult}x</div>
-      <div class="scenario-row"><span class="k">Valor Terminal</span><span class="v">${fmtBRL(d.valorTerminal)}</span></div>
+      <div class="scenario-row"><span class="k">Valor Terminal (EV)</span><span class="v">${fmtBRL(d.valorTerminalEV)}</span></div>
+      <div class="scenario-row"><span class="k">(-) Dívida líquida no Mês 60</span><span class="v">${fmtBRL(-d.dividaLiquidaM60)}</span></div>
+      <div class="scenario-row"><span class="k">Valor Terminal (Equity)</span><span class="v">${fmtBRL(d.valorTerminal)}</span></div>
       <div class="scenario-row"><span class="k">TIR anualizada</span><span class="v">${fmtPct(d.tir)}</span></div>
       <div class="scenario-row"><span class="k">MOIC</span><span class="v">${fmtX(d.moic)}</span></div>
       <div class="scenario-row"><span class="k">Total recebido</span><span class="v">${fmtBRL(d.recebido)}</span></div>
