@@ -187,6 +187,19 @@ button.reset:focus-visible{ outline:2px solid var(--accent); outline-offset:2px;
 .chart-card svg{ width:100%; height:auto; display:block; overflow:visible; }
 .chart-legend{ display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; font-size:12px; color:var(--text-muted); }
 .chart-legend span{ display:inline-flex; align-items:center; gap:6px; }
+
+/* ---- Insight / highlight cards ---- */
+.insight-grid{ grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); }
+.insight-card{
+  background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:12px;
+  padding:16px 18px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:6px;
+}
+.insight-card.warn{ border-left-color:var(--warning); }
+.insight-card .ititle{ font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); font-weight:600; overflow-wrap:break-word; }
+.insight-card .ivalue{ font-family:"IBM Plex Mono",monospace; font-size:clamp(15px,3.6vw,19px); font-weight:600; line-height:1.25; overflow-wrap:anywhere; word-break:break-word; }
+.insight-card .isub{ font-size:12.5px; color:var(--text-muted); line-height:1.45; overflow-wrap:break-word; }
+.narrative-note{ font-size:14px; line-height:1.6; color:var(--text); }
+.narrative-note strong{ color:var(--accent-strong); }
 .chart-legend i{ width:10px; height:10px; border-radius:3px; display:inline-block; flex:none; }
 .chart-svg-wrap{ width:100%; overflow-x:auto; }
 .chart-svg-wrap svg text{ font-family:"IBM Plex Mono",monospace; }
@@ -226,8 +239,7 @@ table.sheet tr.section-row td{ background:var(--surface-2); font-weight:700; col
   font-family:"IBM Plex Sans",sans-serif; text-align:left; position:sticky; left:0; }
 table.sheet tr.total-row td{ font-weight:700; color:var(--text); border-top:1px solid var(--border); }
 table.sheet tr.total-row td.rowlabel{ color:var(--text); }
-table.sheet td.neg{ color:var(--negative); }
-table.sheet td.pos{ color:var(--positive); }
+table.sheet td{ color:var(--text); }
 .sheet-note{ margin-top:10px; }
 </style>
 
@@ -254,6 +266,7 @@ table.sheet td.pos{ color:var(--positive); }
     <button class="tab-btn" data-tab="opcons">Operação Consolidada</button>
     <button class="tab-btn" data-tab="dremensal">DRE Mensal</button>
     <button class="tab-btn" data-tab="dreanual">DRE Anual</button>
+    <button class="tab-btn" data-tab="comentarios">Comentários</button>
   </nav>
 
   <!-- TAB: VALUATION -->
@@ -326,6 +339,16 @@ table.sheet td.pos{ color:var(--positive); }
       <div class="sub">Replica a aba <span class="mono">DRE_Geral_Anual</span> — cada ano soma os 12 meses correspondentes da DRE Mensal.</div>
       <div class="table-scroll"><table class="sheet" id="tbl-dreanual"></table></div>
     </div>
+  </div>
+
+  <!-- TAB: COMENTÁRIOS -->
+  <div class="tab-panel" id="tab-comentarios">
+    <div class="section-title"><h2>Comentários e destaques do BP</h2><span class="n">recalcula com os botões</span></div>
+    <div class="panel">
+      <div class="sub">Leitura automática dos números acima nas premissas atuais — muda junto quando você testa outro cenário nos botões.</div>
+      <div class="narrative-note" id="narrativeNote"></div>
+    </div>
+    <div class="grid insight-grid" id="highlightsGrid" style="margin-top:16px;"></div>
   </div>
 
   <footer class="note">
@@ -881,8 +904,7 @@ function renderSheetTable(tableEl, rows, headerCols, headerLabel){
       if(row.fmt==='pct') text = fmtPct(v);
       else if(row.fmt==='int') text = fmtInt(v);
       else text = fmtBRL(v);
-      const cls = row.fmt!=='int' && row.fmt!=='pct' ? (v<0?'neg':(v>0?'pos':'')) : '';
-      return `<td class="${cls}">${text}</td>`;
+      return `<td>${text}</td>`;
     }).join('');
     const rowCls = row.type==='total' ? 'total-row' : '';
     return `<tr class="${rowCls}"><td class="rowlabel">${row.label}</td>${cells}</tr>`;
@@ -1004,6 +1026,87 @@ function buildDreRows(dre){
   ];
 }
 
+/* ============================= COMENTÁRIOS / DESTAQUES ============================= */
+function computeHighlights(r){
+  const eg = r.oc.ebitdaGlobal, ea = r.oc.ebitdaAtual, em = r.oc.ebitdaMK4U;
+  const torres = r.om.torres;
+  const maxTorres = Math.max(...torres);
+  const firstPositiveIdx = eg.findIndex(v=>v>0);
+  const negMonths = eg.filter(v=>v<0).length;
+  const crossoverIdx = em.findIndex((v,i)=>v>ea[i]);
+  const plateauIdx = torres.findIndex(v=>v===maxTorres);
+  let maxJump=-Infinity, maxJumpIdx=-1;
+  for(let i=1;i<eg.length;i++){ const d=eg[i]-eg[i-1]; if(d>maxJump){maxJump=d; maxJumpIdx=i;} }
+  let minDrop=Infinity, minDropIdx=-1;
+  for(let i=1;i<eg.length;i++){ const d=eg[i]-eg[i-1]; if(d<minDrop){minDrop=d; minDropIdx=i;} }
+  const dreA = r.dreAnual;
+  const totalCapex = r.om.capexTotal.reduce((a,b)=>a+b,0);
+  const cagrReceita = dreA.receitaBruta[0]>0 ? Math.pow(dreA.receitaBruta[4]/dreA.receitaBruta[0], 1/4)-1 : null;
+  const cagrEbitda = dreA.ebitda[0]>0 ? Math.pow(dreA.ebitda[4]/dreA.ebitda[0], 1/4)-1 : null;
+  return { firstPositiveIdx, negMonths, crossoverIdx, plateauIdx, maxTorres, maxJump, maxJumpIdx, minDrop, minDropIdx, dreA, totalCapex, cagrReceita, cagrEbitda };
+}
+
+function renderHighlights(r){
+  const h = computeHighlights(r);
+  const cards = [];
+
+  if(h.negMonths===0){
+    cards.push({title:'EBITDA Global', value:'Positivo desde o mês 1', sub:'Nas premissas atuais, o EBITDA Global não fica negativo em nenhum dos 60 meses simulados.'});
+  } else if(h.firstPositiveIdx>=0){
+    cards.push({title:'EBITDA Global vira positivo', value:'Mês '+(h.firstPositiveIdx+1), warn:true,
+      sub:h.negMonths+' mês(es), no total, com EBITDA Global negativo nas premissas atuais.'});
+  } else {
+    cards.push({title:'EBITDA Global', value:'Não fica positivo em nenhum dos 60 meses', warn:true,
+      sub:'Nas premissas atuais o EBITDA Global permanece negativo o tempo todo — vale revisar os botões.'});
+  }
+
+  if(h.crossoverIdx>=0){
+    cards.push({title:'MK4U ultrapassa a Estratégia Atual', value:'Mês '+(h.crossoverIdx+1),
+      sub:'A partir desse mês, o EBITDA da Estratégia MK4U passa a ser maior que o da Estratégia Atual (78 máquinas fixas).'});
+  }
+
+  cards.push({title:'Parque de torres atinge o teto', value:'Mês '+(h.plateauIdx+1)+' ('+fmtInt(h.maxTorres)+' torres)',
+    sub:'A partir daí o número de torres para de crescer — o EBITDA continua subindo só pelo reajuste anual de preço (10% a.a.) e custos (5% a.a.), por isso ele avança em "degraus" a cada 12 meses, e não de forma contínua.'});
+
+  if(h.maxJumpIdx>=0 && h.maxJump>0){
+    cards.push({title:'Maior salto mensal de EBITDA Global', value:'Mês '+(h.maxJumpIdx+1)+' (+'+fmtBRL(h.maxJump)+')',
+      sub:'Costuma coincidir com o reajuste anual de preço/custos no início de cada ano (meses 13, 25, 37, 49...).'});
+  }
+  if(h.minDropIdx>=0 && h.minDrop<0){
+    cards.push({title:'Maior queda mensal de EBITDA Global', value:'Mês '+(h.minDropIdx+1)+' ('+fmtBRL(h.minDrop)+')', warn:true,
+      sub:'Geralmente ligada à entrada de novas torres (ramp-up de adesão) ou a um degrau de custo (bloco de 150 máquinas / pró-labore).'});
+  }
+
+  cards.push({title:'Margem EBITDA Global', value:fmtPct(h.dreA.margemEbitda[0])+' → '+fmtPct(h.dreA.margemEbitda[4]),
+    sub:'Do Ano 1 ao Ano 5 — ganho de escala à medida que o parque de torres cresce e os custos corporativos (pró-labore, bloco de 150 máquinas) se diluem sobre uma receita maior.'});
+
+  if(h.cagrReceita!=null){
+    cards.push({title:'Receita Bruta Global', value:fmtBRL(h.dreA.receitaBruta[0])+' → '+fmtBRL(h.dreA.receitaBruta[4]),
+      sub:'CAGR de '+fmtPct(h.cagrReceita)+' ao ano entre o Ano 1 e o Ano 5.'});
+  }
+
+  cards.push({title:'Payback do investidor (cenário Base)', value:r.base.payback+' meses (≈'+(r.base.payback/12).toFixed(1)+' anos)',
+    sub:'Payback descontado (WACC 20% a.a.): '+r.base.paybackD+' meses. TIR anualizada: '+fmtPct(r.base.tir)+' — MOIC: '+fmtX(r.base.moic)+'.'});
+
+  cards.push({title:'CAPEX total em torres (5 anos)', value:fmtBRL(h.totalCapex),
+    sub:'Equipamento + obra + taxa de originação MK4U, somado ao longo dos 60 meses — financiado majoritariamente via consórcio.'});
+
+  document.getElementById('highlightsGrid').innerHTML = cards.map(c=>`
+    <div class="insight-card${c.warn?' warn':''}">
+      <div class="ititle">${c.title}</div>
+      <div class="ivalue">${c.value}</div>
+      <div class="isub">${c.sub}</div>
+    </div>`).join('');
+
+  const noteEl = document.getElementById('narrativeNote');
+  if(noteEl){
+    const ebitdaPhrase = h.negMonths===0
+      ? 'o EBITDA Global já nasce positivo e nunca fica negativo nas premissas atuais'
+      : `o EBITDA Global vira positivo a partir do mês ${h.firstPositiveIdx+1}`;
+    noteEl.innerHTML = `Com essas premissas, ${ebitdaPhrase}. O crescimento é puxado pela instalação das torres da Estratégia MK4U até o mês ${h.plateauIdx+1}, quando o parque atinge seu teto de ${fmtInt(h.maxTorres)} torres; daí em diante, o EBITDA só sobe pelo reajuste anual de preço e custos. A margem EBITDA Global evolui de <strong>${fmtPct(h.dreA.margemEbitda[0])}</strong> no Ano 1 para <strong>${fmtPct(h.dreA.margemEbitda[4])}</strong> no Ano 5, e o investidor recupera o capital investido em <strong>${r.base.payback} meses</strong> no cenário Base.`;
+  }
+}
+
 function update(){
   const r = runModel(state);
   const base = r.base;
@@ -1058,6 +1161,8 @@ function update(){
   renderSheetTable(document.getElementById('tbl-opcons'), buildOpConsRows(r.oc), monthsHeader, 'Operação Consolidada');
   renderSheetTable(document.getElementById('tbl-dremensal'), buildDreRows(r.dre), monthsHeader, 'DRE Mensal');
   renderSheetTable(document.getElementById('tbl-dreanual'), buildDreRows(r.dreAnual), yearsHeader, 'DRE Anual');
+
+  renderHighlights(r);
 }
 
 syncControlsFromState();
